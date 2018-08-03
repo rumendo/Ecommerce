@@ -1,25 +1,33 @@
 var createError = require('http-errors');
-var express = require('express');
 var path = require('path');
-var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var express = require('express');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
+var mustacheExpress = require('mustache-express');
+
 var User = require('./models/user');
 var app = express();
 
+//Psql connection
+var pg = require('pg');
+var conString = "postgres://ecommerce:root@localhost:5432/ecommerce";
+var client = new pg.Client(conString);
+client.connect();
+
+app.use(express.static('public'))
 
 // view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'pug');
+app.engine('html', mustacheExpress());
+app.set('view engine', 'html');
+app.set('views', __dirname + '/pages');
 
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+
 
 
 app.use(session({
@@ -35,39 +43,59 @@ app.use(session({
 // middleware function to check for logged-in users
 var sessionChecker = (req, res, next) => {
     if (req.session.user && req.cookies.user_sid) {
-        res.redirect('/dashboard');
+        res.redirect('/homepage');
     } else {
         next();
     }
 };
 
-// route for Home-Page
+function getProducts(){
+    return client.query("SELECT id, name, price, discount short_desc, img_path FROM product WHERE available_quantity > 0 AND discount > 15 AND NOT is_hidden");
+}
+function getProduct(id){
+    return client.query("SELECT * FROM product WHERE id = " + id);
+}
+
+// route for Homepage
 app.get('/', (req, res) => {
-    if (req.session.user && req.cookies.user_sid){
-        res.render("homepage");
-    }else{
-        res.render("mainpage");
-    }
+    getProducts().then(function (products) {
+        console.log(products);
+        if (req.session.user && req.cookies.user_sid) {
+            res.render('homepage', products);
+        } else {
+            res.render('mainpage', products);
+        }
+    });
+});
+
+// route for product page
+app.get('/product/:id', function(req, res){
+    getProduct(req.params.id).then(function (product) {
+        res.render('product', product.rows[0]);
+    });
 });
 
 
 // route for user signup
 app.route('/signup')
     .get(sessionChecker, (req, res) => {
-        res.sendFile(__dirname + '/pages/signup.html');
+        res.render('signup');
     })
     .post((req, res) => {
         User.create({
-            username: req.body.username,
+            first_name: req.body.first_name,
+            last_name: req.body.last_name,
             email: req.body.email,
-            password: req.body.password
+            password: req.body.password,
+            address: req.body.address
         })
             .then(user => {
+                console.log(user.dataValues);
                 req.session.user = user.dataValues;
-                res.redirect('/dashboard');
+                res.redirect('/');
             })
             .catch(error => {
-                res.redirect('/signup');
+                res.redirect('/error');
             });
     });
 
@@ -75,33 +103,28 @@ app.route('/signup')
 // route for user Login
 app.route('/login')
     .get(sessionChecker, (req, res) => {
-        res.sendFile(__dirname + '/pages/login.html');
+        res.render('login');
     })
     .post((req, res) => {
-        var username = req.body.username,
+        var email = req.body.email,
             password = req.body.password;
 
-        User.findOne({ where: { username: username } }).then(function (user) {
+        User.findOne({ where: { email: email } }).then(function (user) {
+            console.log(user);
             if (!user) {
-                res.redirect('/login');
+                res.render('login', {
+                        error: 'Incorrect email address or password!'
+                });
             } else if (!user.validPassword(password)) {
-                res.redirect('/login');
+                res.render('login', {
+                        error: 'Incorrect email address or password!'
+                });
             } else {
                 req.session.user = user.dataValues;
-                res.redirect('/dashboard');
+                res.redirect('/');
             }
         });
     });
-
-
-// route for user's dashboard
-app.get('/dashboard', (req, res) => {
-    if (req.session.user && req.cookies.user_sid) {
-        res.sendFile(__dirname + '/pages/dashboard.html');
-    } else {
-        res.redirect('/login');
-    }
-});
 
 
 // route for user logout
