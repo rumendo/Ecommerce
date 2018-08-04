@@ -49,17 +49,11 @@ var sessionChecker = (req, res, next) => {
     }
 };
 
-function getProducts(){
-    return client.query("SELECT id, name, price, discount short_desc, img_path FROM product WHERE available_quantity > 0 AND discount > 15 AND NOT is_hidden");
-}
-function getProduct(id){
-    return client.query("SELECT * FROM product WHERE id = " + id);
-}
 
 // route for Homepage
 app.get('/', (req, res) => {
     getProducts().then(function (products) {
-        console.log(products);
+        //console.log(products);
         if (req.session.user && req.cookies.user_sid) {
             res.render('homepage', products);
         } else {
@@ -68,9 +62,61 @@ app.get('/', (req, res) => {
     });
 });
 
+// route for Homepage
+app.get('/parts', (req, res) => {
+    getParts().then(function (parts) {
+        console.log(parts);
+        res.render('parts', parts);
+    });
+});
+
+app.get('/parts/:type', (req, res) => {
+    console.log(req.params.type);
+    getType(req.params.type).then(function (products) {
+        if(req.params.type === "fork") {
+            res.render('fork', products);
+        }else if(req.params.type === "wheels"){
+            res.render('wheels', products);
+        }else if(req.params.type === "chain") {
+            res.render('chain', products);
+        }
+    });
+});
+
+app.get('/parts/wheels', (req, res) => {
+    getType(req.params.type).then(function (wheels) {
+        console.log(wheels);
+        res.render('wheels', wheels);
+    });
+});
+
+app.get('/parts/chain', (req, res) => {
+    getType(req.params.type).then(function (chains) {
+        console.log(chains);
+        res.render('chains', chains);
+    });
+});
+
+// route for contacts page
+app.get('/contacts', (req, res) => {
+    res.render('contacts');
+});
+
 // route for product page
 app.get('/product/:id', function(req, res){
     getProduct(req.params.id).then(function (product) {
+        if (req.session.user && req.cookies.user_sid) {
+            res.render('product', product.rows[0]);
+        } else {
+            res.render('productNotLogged', product.rows[0]);
+        }
+    });
+});
+
+// route for adding product to cart
+app.post('/addCart/:id', function(req, res){
+    getProduct(req.params.id).then(function (product) {
+        //if(addSucess) product["command"] = "Product added succesfuly.";
         res.render('product', product.rows[0]);
     });
 });
@@ -153,5 +199,40 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
-
 module.exports = app;
+
+function getProducts(){
+    return client.query("SELECT id, name, price, discount short_desc, img_path FROM product WHERE available_quantity > 0 AND discount > 15 AND NOT is_hidden;");
+}
+
+function getParts(){
+    return client.query("SELECT * FROM category");
+}
+
+function getProduct(id){
+    return client.query("SELECT * FROM product WHERE id = " + id + ";");
+}
+
+function getType(type){
+    return client.query("SELECT * FROM product WHERE type = '" + type + "';");
+}
+
+
+
+// function getTypes() {
+//     client.query("SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';").then(function (nameJSON) {
+//         var types = [];
+//         var names = [];
+//         nameJSON = nameJSON.rows;
+//         Object.keys(nameJSON).forEach(function(k){
+//             names.push(nameJSON[k]["table_name"]);
+//         });
+
+//         names.forEach(function (name) {
+//             if(!name.indexOf("product_")){
+//                 types.push(name.substr(8));
+//             }
+//         });
+//         console.log(types);
+//     });
+// }

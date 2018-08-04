@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title>{{title}}</title>
+    <title>{{name}}</title>
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 </head>
@@ -15,6 +15,8 @@
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="nav navbar-nav">
                 <li><a href="/">Home</a></li>
+                <li><a href="/parts">Parts</a></li>
+                <li><a href="/contacts">Contacts</a></li>
             </ul>
 
             <ul class="nav navbar-nav navbar-right">
@@ -34,6 +36,12 @@
             <h1>{{name}}</h1>
             <br>
            {{long_desc}}
+            <form action="/addCart/{{id}}" method="post"><br><br>
+                <div>
+                    <input class="form-control" value="1" type="number" name="quantity" min="1" max="10" style="width:12%"><br>
+                    <input class="btn btn-primary" type="submit" value="Add to cart"/>
+                </div>
+            </form>
         </div>
     </div><!-- end row -->
 </div><!-- end container -->

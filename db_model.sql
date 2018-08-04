@@ -50,6 +50,14 @@ CREATE TABLE orders(
     status_code         SMALLINT NOT NULL
 );
 
+CREATE TABLE category(
+    id          SERIAL PRIMARY KEY,
+    name        VARCHAR(100) NOT NULL,
+    type        VARCHAR(100) NOT NULL,
+    description VARCHAR(500) NOT NULL,
+    img_path    VARCHAR(200) NOT NULL
+);
+
 CREATE TABLE product_fork(
     id          INT PRIMARY KEY REFERENCES product(id),
     travel      INT NOT NULL,
