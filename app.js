@@ -16,7 +16,7 @@ var conString = "postgres://ecommerce:root@localhost:5432/ecommerce";
 var client = new pg.Client(conString);
 client.connect();
 
-app.use(express.static('public'))
+app.use(express.static('public'));
 
 // view engine setup
 app.engine('html', mustacheExpress());
@@ -54,11 +54,11 @@ var sessionChecker = (req, res, next) => {
 app.get('/', (req, res) => {
     getProducts().then(function (products) {
         //console.log(products);
-        if (req.session.user && req.cookies.user_sid) {
-            res.render('homepage', products);
-        } else {
-            res.render('mainpage', products);
+        if (!(req.session.user && req.cookies.user_sid)) {
+            products["command"] = '';
         }
+        res.render('homepage', products);
+
     });
 });
 
@@ -66,58 +66,76 @@ app.get('/', (req, res) => {
 app.get('/parts', (req, res) => {
     getParts().then(function (parts) {
         console.log(parts);
+        if (!(req.session.user && req.cookies.user_sid)) {
+            parts["command"] = '';
+        }
         res.render('parts', parts);
     });
 });
 
-app.get('/parts/:type', (req, res) => {
-    console.log(req.params.type);
-    getType(req.params.type).then(function (products) {
-        if(req.params.type === "fork") {
+app.get('/parts', (req, res) => {
+    console.log(req.param('type'));
+    getType(req.param('type')).then(function (products) {
+        if (!(req.session.user && req.cookies.user_sid)) {
+            products["command"] = '';
+        }
+        if(req.param('type') === "fork") {
             res.render('fork', products);
-        }else if(req.params.type === "wheels"){
+        }else if(req.param('type') === "wheels"){
             res.render('wheels', products);
-        }else if(req.params.type === "chain") {
+        }else if(req.param('type') === "chain") {
             res.render('chain', products);
         }
     });
 });
 
-app.get('/parts/wheels', (req, res) => {
-    getType(req.params.type).then(function (wheels) {
-        console.log(wheels);
-        res.render('wheels', wheels);
-    });
-});
-
-app.get('/parts/chain', (req, res) => {
-    getType(req.params.type).then(function (chains) {
-        console.log(chains);
-        res.render('chains', chains);
-    });
-});
+// app.get('/parts/wheels', (req, res) => {
+//     getType(req.params.type).then(function (wheels) {
+//         if (!(req.session.user && req.cookies.user_sid)) {
+//             wheels["command"] = '';
+//         }
+//         console.log(wheels);
+//         res.render('wheels', wheels);
+//     });
+// });
+//
+// app.get('/parts/chain', (req, res) => {
+//     getType(req.params.type).then(function (chains) {
+//         if (!(req.session.user && req.cookies.user_sid)) {
+//             chains["command"] = '';
+//         }
+//         console.log(chains);
+//         res.render('chains', chains);
+//     });
+// });
 
 // route for contacts page
 app.get('/contacts', (req, res) => {
-    res.render('contacts');
+    if (req.session.user && req.cookies.user_sid) {
+        var products = {"command":"Logged"};
+    }
+    res.render('contacts', products);
 });
 
 // route for product page
-app.get('/product/:id', function(req, res){
-    getProduct(req.params.id).then(function (product) {
-        if (req.session.user && req.cookies.user_sid) {
-            res.render('product', product.rows[0]);
-        } else {
-            res.render('productNotLogged', product.rows[0]);
+app.get('/product', function(req, res){
+    getProduct(req.param('id')).then(function (product) {
+        if (!(req.session.user && req.cookies.user_sid)) {
+            product["command"] = '';
         }
+        res.render('product', product);
+
     });
 });
 
 // route for adding product to cart
-app.post('/addCart/:id', function(req, res){
-    getProduct(req.params.id).then(function (product) {
+app.post('/addCart', function(req, res){
+    getProduct(req.param('id')).then(function (product) {
+        if (!(req.session.user && req.cookies.user_sid)) {
+            product["command"] = '';
+        }
         //if(addSucess) product["command"] = "Product added succesfuly.";
-        res.render('product', product.rows[0]);
+        res.render('product', product);
     });
 });
 
@@ -149,7 +167,8 @@ app.route('/signup')
 // route for user Login
 app.route('/login')
     .get(sessionChecker, (req, res) => {
-        res.render('login');
+        console.log(req.param('id'));
+        res.render('login', {id:req.param('id')});
     })
     .post((req, res) => {
         var email = req.body.email,
@@ -159,14 +178,19 @@ app.route('/login')
             console.log(user);
             if (!user) {
                 res.render('login', {
+                        id : req.param('id'),
                         error: 'Incorrect email address or password!'
                 });
             } else if (!user.validPassword(password)) {
                 res.render('login', {
+                        id: req.param('id'),
                         error: 'Incorrect email address or password!'
                 });
             } else {
                 req.session.user = user.dataValues;
+                if(req.param('id')}){
+                    res.redirect('addCart', req.param('id')});
+                }
                 res.redirect('/');
             }
         });
