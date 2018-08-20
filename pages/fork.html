@@ -27,6 +27,7 @@
 
             <ul class="nav navbar-nav navbar-right">
                 {{#command}}
+                <li><a href="/cart">Cart</a></li>
                 <li><a href="/logout">Log Out</a></li>
                 {{/command}}
                 {{^command}}
@@ -43,11 +44,16 @@
     {{#rows}}
     <div class="col-lg-2 col-md-3 col-xs-6 col-xs-offset-1">
         <div class="card" style="width: 200px;">
+            <h5 class="card-title">{{name}}</h5>
             <img class="card-img-top img-thumbnail" src="{{img_path}}" alt="Woops">
-            <div class="card-body">
-                <h5 class="card-title">{{name}}</h5>
-                <p class="card-text">{{short_desc}}</p>
-                <a href="/product/{{id}}" class="btn btn-primary">Buy now!</a>
+            <div class="card-body"><br>
+                <p class="card-text">{{short_desc}}
+                    <span style="font-weight: bold; color: green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{discount}}$</span>
+                </p>
+                <form action="/product" method="get"><br>
+                    <input name="id" class="btn btn-primary" type="hidden" value="{{id}}"/>
+                    <input class="btn btn-primary" type="submit" value="Learn more!"/>
+                </form>
             </div>
         </div>
     </div>

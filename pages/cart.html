@@ -1,7 +1,6 @@
 <html>
 <head>
-    <title>{{name}}</title>
-    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>Cart</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 </head>
 <body class="container">
@@ -32,34 +31,34 @@
         </div><!-- /.navbar-collapse -->
     </div><!-- /.container-fluid -->
 </nav>
-<br><br>
 
-<div class="container" id="product-section">
-    <div class="row">
-        {{#rows}}
-        <div class="col-md-6">
-            <img class="img-thumbnail" src="{{img_path}}" alt="Woops">
-        </div>
-        <div class="col-md-6">
-            <h1>{{name}}</h1>
-            <br>
-           {{long_desc}}
-            {{#command}}
-                <form action="/addCart" method="post"><br><br>
-                    <input class="form-control" value="1" type="number" name="quantity" min="1" max="10" style="width:12%"><br>
-                    <input name="id" class="btn btn-primary" type="hidden" value="{{id}}"/>
-                    <input class="btn btn-primary" type="submit" value="Add to cart"/>
-            {{/command}}
-            {{^command}}
-                <form action="/login" method="get"><br><br>
-                    <input name="id" class="btn btn-primary" type="hidden" value="{{id}}"/>
-                    <input class="btn btn-primary" type="submit" value="Login to buy"/>
-            {{/command}}
-            </form>
-        </div>
-        {{/rows}}
-    </div><!-- end row -->
-</div><!-- end container -->
-
+<div class="container row">
+    <div class="row"> <br>
+        <table class="table" style="width: 60%">
+            <thead class="thead-light">
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            {{#rows}}
+            <tr>
+                <td>{{name}}</td>
+                <td>{{sum}}</td>
+                <td>{{price}}$</td>
+                <form action="/rmCart" method="post" id="{{name}}">
+                    <input name="uid" class="btn btn-primary" type="hidden" value="{{RowCtor}}"/>
+                    <input name="pid" class="btn btn-primary" type="hidden" value="{{product_id}}"/>
+                </form>
+                <td>
+                    <input class="btn btn-primary" type="submit" value="Delete Item" form="{{name}}"/>
+                </td>
+            </tr>
+            {{/rows}}
+        </table><br><br>
+        <span style="font-size: 32px; color: #00B7FF; font-weight: bold">Total: {{oid}}$</span>
+    </div>
+</div>
 </body>
 </html>

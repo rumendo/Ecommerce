@@ -57,8 +57,10 @@ app.get('/', (req, res) => {
         if (!(req.session.user && req.cookies.user_sid)) {
             products["command"] = '';
         }
+        products.rows.forEach(function (product, index, rows) {
+            rows[index]["discount"] = product["price"] * (100-product["discount"]) / 100;
+        });
         res.render('homepage', products);
-
     });
 });
 
@@ -73,19 +75,16 @@ app.get('/parts', (req, res) => {
     });
 });
 
-app.get('/parts', (req, res) => {
-    console.log(req.param('type'));
+app.get('/parts/*', (req, res) => {
     getType(req.param('type')).then(function (products) {
         if (!(req.session.user && req.cookies.user_sid)) {
             products["command"] = '';
         }
-        if(req.param('type') === "fork") {
-            res.render('fork', products);
-        }else if(req.param('type') === "wheels"){
-            res.render('wheels', products);
-        }else if(req.param('type') === "chain") {
-            res.render('chain', products);
-        }
+        products.rows.forEach(function (product, index, rows) {
+            rows[index]["discount"] = product["price"] * (100-product["discount"]) / 100;
+        });
+        console.log(req.param('type'));
+        res.render('fork', products);
     });
 });
 
@@ -124,7 +123,6 @@ app.get('/product', function(req, res){
             product["command"] = '';
         }
         res.render('product', product);
-
     });
 });
 
@@ -134,11 +132,41 @@ app.post('/addCart', function(req, res){
         if (!(req.session.user && req.cookies.user_sid)) {
             product["command"] = '';
         }
-        //if(addSucess) product["command"] = "Product added succesfuly.";
+        console.log(req.session.user.id);
+        addToCart(req.session.user.id, req.param('id'), req.param('quantity')).then(function (response) {
+        //     if(response) product["command"] = "Product added succesfuly.";
+        //     else product["command"] = "There was a problem. Please try again.";
+        });
         res.render('product', product);
     });
 });
 
+// route for deleting product from cart
+
+app.post('/rmCart', function(req, res){
+    rmCart(req.param('uid'), req.param('pid')).then(function (product) {
+        if (!(req.session.user && req.cookies.user_sid)) {
+            product["command"] = '';
+        }
+        res.redirect('cart');
+    });
+});
+
+// route for cart page
+app.get('/cart', (req, res) => {
+    getCart(req.session.user.id).then(function (products) {
+        if (!(req.session.user && req.cookies.user_sid)) {
+            products["command"] = '';
+        }
+        console.log(products);
+        products.RowCtor = req.session.user.id;
+        products.rows.forEach(function (product, index, rows) {
+            rows[index]["price"] = product["price"] * product["sum"] * (100-product["discount"]) / 100;
+            products.oid += rows[index]["price"];
+        });
+        res.render('cart', products);
+    });
+});
 
 // route for user signup
 app.route('/signup')
@@ -188,8 +216,8 @@ app.route('/login')
                 });
             } else {
                 req.session.user = user.dataValues;
-                if(req.param('id')}){
-                    res.redirect('addCart', req.param('id')});
+                if(req.param('id')){
+                    res.redirect('/addCart' + '?id=' + req.param('id'));
                 }
                 res.redirect('/');
             }
@@ -226,7 +254,7 @@ app.use(function(err, req, res, next) {
 module.exports = app;
 
 function getProducts(){
-    return client.query("SELECT id, name, price, discount short_desc, img_path FROM product WHERE available_quantity > 0 AND discount > 15 AND NOT is_hidden;");
+    return client.query("SELECT id, name, price, discount, short_desc, img_path FROM product WHERE available_quantity > 0 AND discount > 15 AND NOT is_hidden ORDER BY discount DESC;");
 }
 
 function getParts(){
@@ -241,8 +269,17 @@ function getType(type){
     return client.query("SELECT * FROM product WHERE type = '" + type + "';");
 }
 
+function getCart(id){
+    return client.query("SELECT cart.product_id, SUM(cart.product_quantity), product.name, product.price, product.discount FROM cart INNER JOIN product ON cart .product_id = id WHERE user_id = " + id + " GROUP BY cart.product_id, product.name, product.price, product.discount;");
+}
 
+function addToCart(user, product, quantity){
+    return client.query("INSERT INTO cart (user_id, product_id, product_quantity) VALUES (" + user + "," + product + "," + quantity + ");");
+}
 
+function rmCart(uid, pid) {
+    return client.query("DELETE FROM cart WHERE user_id = " + uid + "AND product_id = " + pid + ";");
+}
 // function getTypes() {
 //     client.query("SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';").then(function (nameJSON) {
 //         var types = [];

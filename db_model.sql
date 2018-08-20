@@ -35,7 +35,6 @@ CREATE TABLE user_entries(
 
 CREATE TABLE cart(
     row                 SERIAL PRIMARY KEY,
-    id                  INT NOT NULL,
     user_id             INT NOT NULL REFERENCES users(id),
     product_id          INT NOT NULL REFERENCES product(id),
     product_quantity    INT NOT NULL
@@ -57,6 +56,9 @@ CREATE TABLE category(
     description VARCHAR(500) NOT NULL,
     img_path    VARCHAR(200) NOT NULL
 );
+
+INSERT INTO product VALUES (3, 'Deemax', 1000, 0, 'Very good wheels.', 'Indestructible wheels!', './public/images/deemax.jpg', 21, 'wheels', 'Mavic', FLASE);
+INSERT INTO cart (user_id, product_id, product_quantity) VALUES (2,2,2);
 
 CREATE TABLE product_fork(
     id          INT PRIMARY KEY REFERENCES product(id),
