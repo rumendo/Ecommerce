@@ -11,13 +11,40 @@ function downloadUrl(url, callback) {
 }
 
 function displayManufactures(type){
-    var url = 'http://localhost:3000/getManufacturers/' + type;
+    var url = 'http://localhost:3000/filter/manufacturers/' + type;
     console.log(url);
     downloadUrl(url, function(result) {
-        var options = '';
-        Array.prototype.forEach.call(result, function(element){
-            options += '<option value="'+element+'"/>';
+        console.log(result.rows);
+        var options = '<h3>Manufacturer</h3>';
+        Array.prototype.forEach.call(result.rows, function(element){
+
+            options +=
+                '<div></div><input type="checkbox" id="' + element['manufacturer'] +
+                '" name="manufacturer" value="' + element['manufacturer'] +
+                '"><label for="' + element['manufacturer'] +
+                '">&nbsp;&nbsp;' + element['manufacturer'] +
+                '</label></div>';
+
         });
-        document.getElementById('manufacturers').innerHTML = options;
+        options += $('#filters').html();
+        $('#filters').html(options);
     });
 }
+
+// function displayPrices(){
+//     var url = 'http://localhost:3000/filter/prices/' + type;
+//     console.log(url);
+//     downloadUrl(url, function(result) {
+//         console.log(result.rows);
+//         var options = $('#filters').html();
+//
+//
+//
+//         $('#filters').html(options);
+//     });
+// }
+
+$(window).bind("load", function() {
+    displayManufactures(document.getElementById('type').innerHTML);
+    //displayPrices(document.getElementById('type').innerHTML);
+});

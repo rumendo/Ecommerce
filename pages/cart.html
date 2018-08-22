@@ -10,7 +10,6 @@
 
 <nav class="navbar navbar-default">
     <div class="container-fluid">
-        <!-- Collect the nav links, forms, and other content for toggling -->
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="nav navbar-nav">
                 <li><a href="/">Home</a></li>
@@ -48,7 +47,6 @@
                 <td>{{sum}}</td>
                 <td>{{price}}$</td>
                 <form action="/rmCart" method="post" id="{{name}}">
-                    <input name="uid" class="btn btn-primary" type="hidden" value="{{RowCtor}}"/>
                     <input name="pid" class="btn btn-primary" type="hidden" value="{{product_id}}"/>
                 </form>
                 <td>
@@ -57,7 +55,9 @@
             </tr>
             {{/rows}}
         </table><br><br>
-        <span style="font-size: 32px; color: #00B7FF; font-weight: bold">Total: {{oid}}$</span>
+        <span style="font-size: 32px; color: #00B7FF; font-weight: bold">Total: {{oid}}$</span><br><br>
+
+        <a href="/checkout" class="btn btn-primary">Checkout</a>
     </div>
 </div>
 </body>
