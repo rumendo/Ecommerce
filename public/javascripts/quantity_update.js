@@ -10,41 +10,11 @@ function downloadUrl(url, callback) {
     xmlhttp.send();
 }
 
-function displayManufactures(type){
-    var url = 'http://localhost:3000/filter/manufacturers/' + type;
+$( "input[id*='quantity']" ).on('keyup mouseup', function (data) {
+    var url = 'http://localhost:3000/quantityUpdate?quantity=' + $(this).val() + '&pid=' + data.currentTarget.id.substr(8);
     console.log(url);
     downloadUrl(url, function(result) {
-        console.log(result.rows);
-        var options = '<h3>Manufacturer</h3>';
-        Array.prototype.forEach.call(result.rows, function(element){
-
-            options +=
-                '<div></div><input type="checkbox" id="' + element['manufacturer'] +
-                '" name="manufacturer" value="' + element['manufacturer'] +
-                '"><label for="' + element['manufacturer'] +
-                '">&nbsp;&nbsp;' + element['manufacturer'] +
-                '</label></div>';
-
-        });
-        options += $('#filters').html();
-        $('#filters').html(options);
+        location.reload();
+        console.log(result);
     });
-}
-
-// function displayPrices(){
-//     var url = 'http://localhost:3000/filter/prices/' + type;
-//     console.log(url);
-//     downloadUrl(url, function(result) {
-//         console.log(result.rows);
-//         var options = $('#filters').html();
-//
-//
-//
-//         $('#filters').html(options);
-//     });
-// }
-
-$(window).bind("load", function() {
-    displayManufactures(document.getElementById('type').innerHTML);
-    //displayPrices(document.getElementById('type').innerHTML);
 });

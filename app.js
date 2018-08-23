@@ -193,17 +193,26 @@ app.get('/cart', (req, res) => {
         if (!(req.session.user && req.cookies.user_sid)) {
             products["command"] = '';
         }
-        console.log(products);
+
         products.rows.forEach(function (product, index, rows) {
             rows[index]["price"] = product["price"] * product["sum"] * (100-product["discount"]) / 100;
             products.oid += rows[index]["price"];
         });
+        console.log("LMAOLMAOLMAOLMAOLMAOLMAOLMAOLMAOLMAOLMAOLMAOLMAOLMAOLMAOLMAOLMAOLMAOLMAOLMAOLMAOLMAOLMAOLMAO");
+        console.log(products);
         res.render('cart', products);
     });
 });
 
+app.get('/quantityUpdate', function (req, res) {
+    quantityUpdate(req.param('quantity'), req.session.user.id, req.param('pid')).then(function (price) {
+        res.send(price);
+    })
+});
+
 app.route('/checkout')
     .get((req, res) => {
+
         console.log("checkin out");
         userDataCheckout(req.session.user.id, req.param('pid')).then(function (user) {
             if (!(req.session.user && req.cookies.user_sid)) {
@@ -229,7 +238,8 @@ app.route('/signup')
             last_name: req.body.last_name,
             email: req.body.email,
             password: req.body.password,
-            address: req.body.address
+            address: req.body.address,
+            phone: req.body.phone
         })
             .then(user => {
                 console.log(user.dataValues);
@@ -320,6 +330,10 @@ function getManufacturers(type){
     return client.query("SELECT DISTINCT manufacturer FROM product WHERE type = '" + type + "';");
 }
 
+function quantityUpdate(quantity, uid, pid) {
+    return client.query("UPDATE cart SET product_quantity=" + quantity + " WHERE user_id=" + uid +" AND product_id=" + pid);
+}
+
 // function getPrices(type){
 //     return client.query("SELECT price, discount FROM product WHERE type = '" + type + "';");
 // }
@@ -349,7 +363,7 @@ function rmCart(uid, pid) {
 }
 
 function userDataCheckout(uid) {
-    return client.query("SELECT id, email, first_name, last_name, address FROM users WHERE id=" + uid + ";");
+    return client.query("SELECT id, email, first_name, last_name, address, phone FROM users WHERE id=" + uid + ";");
 }
 
 function checkout(uid) {

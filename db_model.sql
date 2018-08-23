@@ -7,7 +7,8 @@ CREATE TABLE users(
     first_name  VARCHAR(50) NOT NULL,
     last_name   VARCHAR(50) NOT NULL,
     address     VARCHAR(100) NOT NULL,
-    is_admin     BOOLEAN NOT NULL DEFAULT FALSE,
+    phone       VARCHAR(50) NOT NULL,
+    is_admin    BOOLEAN NOT NULL DEFAULT FALSE,
     createdAt   TIMESTAMP WITH TIME ZONE,
     updatedAt   TIMESTAMP WITH TIME ZONE
 );
@@ -23,7 +24,7 @@ CREATE TABLE product(
     available_quantity  INT NOT NULL,
     type            VARCHAR(50) NOT NULL,
     manufacturer    VARCHAR(50) NOT NULL,
-    is_hidden        BOOLEAN NOT NULL DEFAULT FALSE
+    is_hidden       BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE user_entries(
@@ -46,6 +47,8 @@ CREATE TABLE orders(
     user_id             INT NOT NULL REFERENCES users(id),
     product_id          INT NOT NULL REFERENCES product(id),
     product_quantity    INT NOT NULL,
+    address             VARCHAR(100) NOT NULL,
+    phone               VARCHAR(50) NOT NULL, 
     status_code         SMALLINT NOT NULL
 );
 
@@ -57,24 +60,18 @@ CREATE TABLE category(
     img_path    VARCHAR(200) NOT NULL
 );
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 INSERT INTO product VALUES (3, 'Deemax', 1000, 0, 'Very good wheels.', 'Indestructible wheels!', './public/images/deemax.jpg', 21, 'wheels', 'Mavic', FLASE);
 INSERT INTO cart (user_id, product_id, product_quantity) VALUES (2,2,2);
-
-CREATE TABLE product_fork(
-    id          INT PRIMARY KEY REFERENCES product(id),
-    travel      INT NOT NULL,
-    hub_size    VARCHAR(10) NOT NULL,
-    headset     VARCHAR(10) NOT NULL
-);
-
-CREATE TABLE product_wheels(
-    id          INT PRIMARY KEY REFERENCES product(id),
-    diameter    SMALLINT NOT NULL,
-    hub         VARCHAR(10) NOT NULL,
-    spokes      SMALLINT NOT NULL
-);
-
-CREATE TABLE product_chain(
-    id          INT PRIMARY KEY REFERENCES product(id),
-    gears       SMALLINT NOT NULL
-);
