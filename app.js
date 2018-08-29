@@ -6,6 +6,8 @@ var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
 var mustacheExpress = require('mustache-express');
+var nodemailer = require('nodemailer');
+var bcrypt = require('bcrypt');
 
 var User = require('./models/user');
 var app = express();
@@ -104,27 +106,6 @@ app.get('/parts/*', (req, res) => {
         res.render('fork', partsRender(products, req));
     });
 });
-
-
-// app.get('/parts/wheels', (req, res) => {
-//     getType(req.params.type).then(function (wheels) {
-//         if (!(req.session.user && req.cookies.user_sid)) {
-//             wheels["command"] = '';
-//         }
-//         console.log(wheels);
-//         res.render('wheels', wheels);
-//     });
-// });
-//
-// app.get('/parts/chain', (req, res) => {
-//     getType(req.params.type).then(function (chains) {
-//         if (!(req.session.user && req.cookies.user_sid)) {
-//             chains["command"] = '';
-//         }
-//         console.log(chains);
-//         res.render('chains', chains);
-//     });
-// });
 
 
 // route for contacts page
@@ -226,7 +207,6 @@ app.route('/checkout')
     });
 
 
-
 // route for user signup
 app.route('/signup')
     .get(sessionChecker, (req, res) => {
@@ -243,7 +223,8 @@ app.route('/signup')
         })
             .then(user => {
                 console.log(user.dataValues);
-                req.session.user = user.dataValues;
+                // req.session.user = user.dataValues; // Login User without email confirmation
+                accountConfirmEmail(req.body.last_name, req.body.email);
                 res.redirect('/');
             })
             .catch(error => {
@@ -262,26 +243,32 @@ app.route('/login')
         var email = req.body.email,
             password = req.body.password;
 
-        User.findOne({ where: { email: email } }).then(function (user) {
-            console.log(user);
-            if (!user) {
-                res.render('login', {
-                        id : req.param('id'),
-                        error: 'Incorrect email address or password!'
+        checkVerification(req.body.email).then(function (is_verified) {
+            if(is_verified.rowCount) {
+                User.findOne({where: {email: email}}).then(function (user) {
+                    console.log(user);
+                    if (!user) {
+                        res.render('login', {
+                            id: req.param('id'),
+                            error: 'Incorrect email address or password!'
+                        });
+                    } else if (!user.validPassword(password)) {
+                        res.render('login', {
+                            id: req.param('id'),
+                            error: 'Incorrect email address or password!'
+                        });
+                    } else {
+                        req.session.user = user.dataValues;
+                        if (req.param('id')) {
+                            res.redirect('/product' + '?id=' + req.param('id'));
+                        }
+                        res.redirect('/');
+                    }
                 });
-            } else if (!user.validPassword(password)) {
-                res.render('login', {
-                        id: req.param('id'),
-                        error: 'Incorrect email address or password!'
-                });
-            } else {
-                req.session.user = user.dataValues;
-                if(req.param('id')){
-                    res.redirect('/product' + '?id=' + req.param('id'));
-                }
-                res.redirect('/');
-            }
+            } else
+                res.redirect('/'); // Print a message saying email verification is needed.
         });
+
     });
 
 
@@ -293,6 +280,22 @@ app.get('/logout', (req, res) => {
     } else {
         res.redirect('/login');
     }
+});
+
+// route for email confirmation
+app.get('/emailConfirmation', (req, res) => {
+    let hash = bcrypt.hashSync(req.param('uuid'), 10);
+    checkUuid(hash).then(function (result) {
+        console.log(result);
+        if(result.rowCount) {
+            verifyUser(result.rows[0]).then(function (is_verified) {
+                if(is_verified.rowCount)
+                    res.redirect('/');
+                // else ..
+            });
+        }
+        res.redirect('/error');
+    });
 });
 
 
@@ -312,6 +315,8 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 module.exports = app;
+
+
 
 function getProducts(){
     return client.query("SELECT id, name, price, discount, short_desc, img_path FROM product WHERE available_quantity > 0 AND discount > 15 AND NOT is_hidden ORDER BY discount DESC;");
@@ -366,6 +371,19 @@ function userDataCheckout(uid) {
     return client.query("SELECT id, email, first_name, last_name, address, phone FROM users WHERE id=" + uid + ";");
 }
 
+function checkUuid(hash) {
+    return client.query("SELECT email FROM email_verification WHERE account_verifiction=" + hash + ";");
+}
+
+function verifyUser(email) {
+    return client.query("UPDATE users SET is_verified = 't' WHERE email=" + email+ ";");
+}
+
+function checkVerification(email) {
+    return client.query("SELECT is_verified FROM users WHERE email=" + email + ";");
+}
+
+
 function checkout(uid) {
     return client.query(";");
 }
@@ -390,6 +408,86 @@ function partsRender(products, req){
 }
 
 
+// generator.on('token', function(token){
+//     console.log('New token for %s: %s', token.user, token.accessToken);
+// });
+
+let transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'bitaka.ecommerce@gmail.com',
+        pass: 'roottoor'
+    }
+});
+
+
+function accountConfirmEmail(last_name, email) {
+    var uuid = guid();
+    let hash = bcrypt.hashSync(uuid, 10);
+    client.query("INSERT INTO email_verification (user_email, account_verifiction) VALUES (" + email + ', ' + hash + ');');
+    var mailOptions = {
+        from: 'rumen@arc-global.com',
+        to: email,
+        subject: 'Account Confirmation - Bitaka.bg',
+        text: 'Welcome to Bitaka.bg. In order to use your account you need to activate it first: ' + 'http://localhost:3000/emailConfirmation?uuid=' + uuid
+    };
+    console.log(sendMail(mailOptions));
+}
+
+// TO DO
+//
+// function forgotPasswordEmail() {
+//     // Setup mail configuration
+//     var mailOptions = {
+//         from: 'rumen@arc-global.com',
+//         to: "RECEIVER_EMAIL",
+//         subject: 'Account Confirmation for Bitaka.bg',
+//         // text: '', // plaintext body
+//         html: htmlBody // html body
+//     };
+//     console.log(sendMail(mailOptions));
+// }
+//
+// function changedPasswordEmail() {
+//     // Setup mail configuration
+//     var mailOptions = {
+//         from: 'rumen@arc-global.com',
+//         to: "RECEIVER_EMAIL",
+//         subject: 'Account Confirmation for Bitaka.bg',
+//         // text: '', // plaintext body
+//         html: htmlBody // html body
+//     };
+//     console.log(sendMail(mailOptions));
+// }
+
+
+function sendMail(mailOptions) {
+    transporter.sendMail(mailOptions, function(error, info) {
+        if (error) {
+            console.log(error);
+            return {
+                status: 'error',
+                msg: 'Email sending failed'
+            };
+        } else {
+            console.log('Message %s sent: %s', info.messageId, info.response);
+            return {
+                status: 'ok',
+                msg: 'Email sent'
+            };
+        }
+        smtpTransport.close();
+    });
+}
+
+function guid() {
+    function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1);
+    }
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+}
 
 // function getTypes() {
 //     client.query("SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';").then(function (nameJSON) {

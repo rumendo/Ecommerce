@@ -50,6 +50,11 @@ var User = sequelize.define('users', {
             type: Sequelize.BOOLEAN,
             allowNull: false,
             defaultValue: false
+        },
+        is_verified: {
+            type: Sequelize.BOOLEAN,
+            allowNull: false,
+            defaultValue: false
         }
     }, {
             hooks: {
