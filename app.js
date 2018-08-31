@@ -197,7 +197,7 @@ app.route('/checkout')
     .get((req, res) => {
 
         console.log("checkin out");
-        userDataCheckout(req.session.user.id, req.param('pid')).then(function (user) {
+        userDataCheckout(req.session.user.id).then(function (user) {
             if (!(req.session.user && req.cookies.user_sid)) {
                 user["command"] = '';
             }
@@ -205,7 +205,30 @@ app.route('/checkout')
         });
     })
     .post((req, res) => {
-
+        getCart(req.session.user.id)
+            .then(function (cart) {
+                lastOrder()
+                    .then(function (oid) {
+                        console.log(cart);
+                        cart.rows.forEach(function (product) {
+                            checkout(oid, req.session.user.id, product.product_id, product.sum, req.body.address, req.body.phoneNumber, 1)
+                                .then(function (result) {
+                                    console.log(result);
+                                    res.redirect('/');
+                                })
+                                .catch(error => {
+                                    console.log(error);
+                                });
+                        });
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    });
+            })
+            .catch(error => {
+                console.log(error);
+            });
+        res.redirect('/error');;
     });
 
 
@@ -512,8 +535,12 @@ function checkVerification(email) {
     return client.query("SELECT is_verified FROM users WHERE email='" + email + "';");
 }
 
-function checkout(uid) {
-    return client.query(";");
+function lastOrder() {
+    return client.query("SELECT MAX(id) FROM orders");
+}
+
+function checkout(oid, uid, pid, qty, address, phone, code) {
+    return client.query("INSERT INTO orders (id, user_id, product_id, product_quantity, address, phone, status_code) VALUES (" + oid + ", " + uid + ", " + pid + ", " + qty + ", '" + address + "', '" + phone + "', " + code + ");");
 }
 
 function partsRender(products, req){
