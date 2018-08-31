@@ -8,6 +8,7 @@ var session = require('express-session');
 var mustacheExpress = require('mustache-express');
 var nodemailer = require('nodemailer');
 var bcrypt = require('bcrypt');
+var sha256 = require('js-sha256');
 
 var User = require('./models/user');
 var app = express();
@@ -55,7 +56,7 @@ var sessionChecker = (req, res, next) => {
 // route for Homepage
 app.get('/', (req, res) => {
     getProducts().then(function (products) {
-        //console.log(products);
+        console.log(products);
         if (!(req.session.user && req.cookies.user_sid)) {
             products["command"] = '';
         }
@@ -150,10 +151,11 @@ app.post('/addCart', function(req, res){
         }
         console.log(req.session.user.id);
         addToCart(req.session.user.id, req.param('id'), req.param('quantity')).then(function (response) {
-        //     if(response) product["command"] = "Product added succesfuly.";
-        //     else product["command"] = "There was a problem. Please try again.";
+            if(response.rowCount){
+                product.addCart = "True";
+            }
+            res.render('product', product);
         });
-        res.render('product', product);
     });
 });
 
@@ -213,6 +215,22 @@ app.route('/signup')
         res.render('signup');
     })
     .post((req, res) => {
+        console.log(req.body);
+        if(req.body.password != req.body.passwordConfirm) {
+            res.render('signup', {
+                error: "Password mismatch"
+            });
+            return;
+        }
+        checkEmailDuplicate(req.body.email).then(function (result) {
+            console.log(result);
+            if(result.rows[0].exists){
+                res.render('signup', {
+                    error: "A user with the email address you specified already exists"
+                });
+                return;
+            }
+        });
         User.create({
             first_name: req.body.first_name,
             last_name: req.body.last_name,
@@ -225,7 +243,7 @@ app.route('/signup')
                 console.log(user.dataValues);
                 // req.session.user = user.dataValues; // Login User without email confirmation
                 accountConfirmEmail(req.body.last_name, req.body.email);
-                res.redirect('/');
+                res.redirect('/login?registered=1');
             })
             .catch(error => {
                 res.redirect('/error');
@@ -237,7 +255,14 @@ app.route('/signup')
 app.route('/login')
     .get(sessionChecker, (req, res) => {
         console.log(req.param('id'));
-        res.render('login', {id:req.param('id')});
+        if(req.param('registered')){
+            res.render('login', {
+                id : req.param('id'),
+                registered: true
+            });
+        } else {
+            res.render('login', {id:req.param('id')});
+        }
     })
     .post((req, res) => {
         var email = req.body.email,
@@ -261,16 +286,20 @@ app.route('/login')
                         req.session.user = user.dataValues;
                         if (req.param('id')) {
                             res.redirect('/product' + '?id=' + req.param('id'));
+                            return;
                         }
                         res.redirect('/');
+                        return;
                     }
                 });
-            } else
-                res.redirect('/'); // Print a message saying email verification is needed.
+            }else {
+                res.render('login', {
+                    error: "You need to activate account before logging in. You can find the activation link in your email inbox or spam folder."
+                });
+            }
         });
 
     });
-
 
 // route for user logout
 app.get('/logout', (req, res) => {
@@ -284,20 +313,92 @@ app.get('/logout', (req, res) => {
 
 // route for email confirmation
 app.get('/emailConfirmation', (req, res) => {
-    let hash = bcrypt.hashSync(req.param('uuid'), 10);
+    console.log(req.param('uuid'));
+    let hash = sha256(req.param('uuid'));
+    console.log(hash);
     checkUuid(hash).then(function (result) {
         console.log(result);
         if(result.rowCount) {
-            verifyUser(result.rows[0]).then(function (is_verified) {
-                if(is_verified.rowCount)
+            verifyUser(result.rows[0].user_email).then(function (is_verified) {
+                if(is_verified.rowCount) {
                     res.redirect('/');
-                // else ..
+                } else
+                    res.redirect('/error');
             });
         }
-        res.redirect('/error');
+    })
+        .catch(error =>  {
+            console.log(error);
+        });
+});
+
+// route for reset password confirmation
+app.post('/resetPassword', (req, res) => {
+    console.log(req.param('email'));
+    accountPasswordReset(req.param('email'));
+    res.render('login', {
+        error: 'Check your email..'
     });
 });
 
+
+// route for setting a new password
+app.get('/newPassword', (req, res) => {
+    console.log(req.param('uuid'));
+    let hash = sha256(req.param('uuid'));
+    console.log(hash);
+
+    checkUuidTimestamp(hash)
+        .then(function (result) {
+            var time = new Date();
+            if(time.getTime() - result.rows[0].time < 3600) { // Compare to current time
+                checkUuidPassword(hash).then(function (result) {
+                    console.log(result);
+                    if (result.rowCount) {
+                        res.render('resetPassword', result);
+                    } else
+                        res.redirect('/error');
+                })
+                    .catch(error => {
+                        console.log(error);
+                    });
+            } else{
+                deleteForgotPasswordUuid(hash)
+                    .then(function (result) {
+                        res.render('login', {
+                            error : "Password reset link has expired"
+                        });
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    })
+            }
+        })
+        .catch(error => {
+                console.log(error);
+        });
+});
+
+// route for setting the new password
+app.post('/setNewPassword', (req, res) => {
+    if(req.param('password') != req.param('confirmPassword')) {
+        res.render('resetPassword', {
+            error: "Password mismatch!"
+        });
+        return;
+    }
+    bcrypt.hash(req.param('password'), 10, function(err, hash) {
+        setNewPassword(req.param('email'), hash)
+            .then(function (result) {
+                passwordChangedEmail(req.param('email'));
+                deleteForgotPasswordUuid(hash);
+                res.render('login');
+            })
+            .catch(error => {
+                console.log(error);
+            });
+    });
+});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -371,18 +472,45 @@ function userDataCheckout(uid) {
     return client.query("SELECT id, email, first_name, last_name, address, phone FROM users WHERE id=" + uid + ";");
 }
 
+function checkEmailDuplicate(email) {
+    return client.query("SELECT EXISTS(SELECT 1 FROM users WHERE email='" + email + "')");
+}
+
+function addUuid(email, hash) {
+    return client.query("INSERT INTO email_verification (user_email, account_verification) VALUES ('" + email + "', '" + hash + "');");
+}
+
+function addUuidPassword(email, time, hash) {
+    return client.query("INSERT INTO forgot_password (user_email, time, password_verification) VALUES ('" + email + "', '" + time + "', '" + hash + "');");
+}
+
 function checkUuid(hash) {
-    return client.query("SELECT email FROM email_verification WHERE account_verifiction=" + hash + ";");
+    return client.query("SELECT user_email FROM email_verification WHERE account_verification='" + hash + "';");
+}
+
+function checkUuidTimestamp(hash) {
+    return client.query("SELECT EXTRACT(epoch FROM time) AS time FROM forgot_password WHERE password_verification='" + hash + "';");
+}
+
+function checkUuidPassword(hash) {
+    return client.query("SELECT user_email FROM forgot_password WHERE password_verification='" + hash + "';");
+}
+
+function deleteForgotPasswordUuid(hash) {
+    return client.query("DELETE FROM forgot_password WHERE password_verification='" + hash + "';");
+}
+
+function setNewPassword(email, hash) {
+    return client.query("UPDATE users SET password = '" + hash + "' WHERE email='" + email+ "';");
 }
 
 function verifyUser(email) {
-    return client.query("UPDATE users SET is_verified = 't' WHERE email=" + email+ ";");
+    return client.query("UPDATE users SET is_verified = 't' WHERE email='" + email+ "';");
 }
 
 function checkVerification(email) {
-    return client.query("SELECT is_verified FROM users WHERE email=" + email + ";");
+    return client.query("SELECT is_verified FROM users WHERE email='" + email + "';");
 }
-
 
 function checkout(uid) {
     return client.query(";");
@@ -423,42 +551,58 @@ let transporter = nodemailer.createTransport({
 
 function accountConfirmEmail(last_name, email) {
     var uuid = guid();
-    let hash = bcrypt.hashSync(uuid, 10);
-    client.query("INSERT INTO email_verification (user_email, account_verifiction) VALUES (" + email + ', ' + hash + ');');
+    console.log("Gen uuid:"+uuid);
+    let hash = sha256(uuid);
+
+    console.log("Gen hash:"+hash);
+    addUuid(email, hash)
+        .then(function (result) {
+            var mailOptions = {
+                from: 'bitaka.ecommerce@gmail.com',
+                to: email,
+                subject: 'Account Confirmation - Bitaka.bg',
+                text: 'Welcome to Bitaka.bg. In order to use your account you need to activate it first: ' + 'http://localhost:3000/emailConfirmation?uuid=' + uuid
+            };
+            console.log(sendMail(mailOptions));
+        })
+        .catch(error => {
+            console.log(error);
+        });
+
+}
+
+function accountPasswordReset(email) {
+    var uuid = guid();
+    console.log("Gen uuid:"+uuid);
+    let hash = sha256(uuid);
+    var time = new Date().toUTCString();
+    console.log(time);
+    console.log("Gen hash:"+hash);
+    addUuidPassword(email, time, hash)
+        .then(function (result) {
+            var mailOptions = {
+                from: 'bitaka.ecommerce@gmail.com',
+                to: email,
+                subject: 'Password Reset - Bitaka.bg',
+                text: 'Reset your password for Bitaka.bg: ' + 'http://localhost:3000/newPassword?uuid=' + uuid
+            };
+            console.log(sendMail(mailOptions));
+        })
+        .catch(error => {
+            console.log(error);
+        });
+}
+
+function passwordChangedEmail(email) {
+    var time = new Date();
     var mailOptions = {
-        from: 'rumen@arc-global.com',
+        from: 'bitaka.ecommerce@gmail.com',
         to: email,
-        subject: 'Account Confirmation - Bitaka.bg',
-        text: 'Welcome to Bitaka.bg. In order to use your account you need to activate it first: ' + 'http://localhost:3000/emailConfirmation?uuid=' + uuid
+        subject: 'Password Reset - Bitaka.bg',
+        text: 'Your password has been reset at ' + time
     };
     console.log(sendMail(mailOptions));
 }
-
-// TO DO
-//
-// function forgotPasswordEmail() {
-//     // Setup mail configuration
-//     var mailOptions = {
-//         from: 'rumen@arc-global.com',
-//         to: "RECEIVER_EMAIL",
-//         subject: 'Account Confirmation for Bitaka.bg',
-//         // text: '', // plaintext body
-//         html: htmlBody // html body
-//     };
-//     console.log(sendMail(mailOptions));
-// }
-//
-// function changedPasswordEmail() {
-//     // Setup mail configuration
-//     var mailOptions = {
-//         from: 'rumen@arc-global.com',
-//         to: "RECEIVER_EMAIL",
-//         subject: 'Account Confirmation for Bitaka.bg',
-//         // text: '', // plaintext body
-//         html: htmlBody // html body
-//     };
-//     console.log(sendMail(mailOptions));
-// }
 
 
 function sendMail(mailOptions) {

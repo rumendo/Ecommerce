@@ -45,6 +45,10 @@
                 <input type="password" class="form-control" name="password" placeholder="Choose a password">
             </div>
             <div class="form-group">
+                <label>Confirm password</label>
+                <input type="password" class="form-control" name="passwordConfirm" placeholder="Confirm your password">
+            </div>
+            <div class="form-group">
                 <label>Address for deliveries</label>
                 <input type="text" class="form-control" name="address" placeholder="Choose an address for deliveries">
             </div>
@@ -56,6 +60,9 @@
                 <input class="btn btn-primary" type="submit" value="Sign Up"/>
             </div>
         </form>
+        <div>
+            {{error}}
+        </div>
     </div>
 </div>
 </body>

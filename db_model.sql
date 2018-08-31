@@ -64,14 +64,14 @@ CREATE TABLE category(
 CREATE TABLE email_verification(
     row                 SERIAL PRIMARY KEY,
     user_email          VARCHAR (100) NOT NULL UNIQUE REFERENCES users(email),
-    account_verifiction VARCHAR(36) NOT NULL UNIQUE
+    account_verification VARCHAR(100) NOT NULL UNIQUE
 );
 
 CREATE TABLE forgot_password(
     row                 SERIAL PRIMARY KEY,
     user_id             INT NOT NULL REFERENCES users(id),
-    time                TIMESTAMP WITH TIME ZONE,
-    password_verification VARCHAR(36) NOT NULL UNIQUE
+    time                TIMESTAMP WITHOUT TIME ZONE,
+    password_verification VARCHAR(100) NOT NULL UNIQUE
 );
 
 
