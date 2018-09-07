@@ -10,8 +10,8 @@ function downloadUrl(url, callback) {
     xmlhttp.send();
 }
 
-$('.product').on('keyup mouseup', function (data) {
-    var url = 'http://localhost:3000/quantityUpdate?quantity=' + $(this).val() + '&pid=' + data.currentTarget.id.substr(8);
+$('.order').on('keyup mouseup', function (data) {
+    var url = 'http://localhost:3000/admin/orders/changeStatusCode?code=' + $(this).val() + '&oid=' + data.currentTarget.id.substr(4);
     console.log(url);
     downloadUrl(url, function(result) {
         location.reload();

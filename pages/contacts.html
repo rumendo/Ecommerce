@@ -1,6 +1,8 @@
 <html>
 <head>
     <title>Contacts</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="/javascripts/loadMap.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 </head>
 <body class="container">
@@ -32,7 +34,43 @@
 </nav>
 
 <div class="container row">
+    <style>
+        #map {
+            width: 1000px;
+            height: 420px;
+        }
+        #point1x, point1y{
+            display:inline-block;
+        }
+
+    </style>
+    <body onload="readCC();">
+    <form>
+        Country:
+        <input name="country" list="country" id="CC">
+        <datalist id="country"></datalist>
+        City:
+        <input name="city" list="city" id="cities">
+        <datalist id="city"></datalist>
+        Search by area:
+    </form>
+    <form>
+        <input name="point1x" list="point1x" id="point1x" placeholder="First point Latitude">
+        <datalist id="point1x"></datalist>
+        <input name="point1y" list="point1y" id="point1y" placeholder="First point Longitude">
+        <datalist id="point1y"></datalist>
+        <input name="point2x" list="point2x" id="point2x" placeholder="Second point Latitude">
+        <datalist id="point2x"></datalist>
+        <input name="point2y" list="point2y" id="point2y" placeholder="Second point Longitude">
+        <datalist id="point2y"></datalist>
+        <input type="button" id="submit" value="Submit">
+    </form>
+    <div id="countryList"></div>
+    <div id="map"></div>s
 <!-- Add map on the left and info on the right. -->
 </div>
+<script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBiTBKcAUdG9VYCS4wo7Og4DGHIMGnmojc&callback=initMap">
+</script>
 </body>
 </html>

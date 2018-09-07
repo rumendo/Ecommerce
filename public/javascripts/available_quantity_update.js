@@ -11,7 +11,7 @@ function downloadUrl(url, callback) {
 }
 
 $('.product').on('keyup mouseup', function (data) {
-    var url = 'http://localhost:3000/quantityUpdate?quantity=' + $(this).val() + '&pid=' + data.currentTarget.id.substr(8);
+    var url = 'http://localhost:3000/admin/products/availableQuantityUpdate?available_quantity=' + $(this).val() + '&pid=' + data.currentTarget.id.substr(18);
     console.log(url);
     downloadUrl(url, function(result) {
         location.reload();

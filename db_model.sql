@@ -30,27 +30,28 @@ CREATE TABLE product(
 
 CREATE TABLE user_entries(
     id                  SERIAL PRIMARY KEY,
-    user_id             INT NOT NULL REFERENCES users(id),
+    user_id             INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     entry_date_time     TIMESTAMP WITH TIME ZONE,
     entry_ip            VARCHAR(15) NOT NULL
 );
 
 CREATE TABLE cart(
     row                 SERIAL PRIMARY KEY,
-    user_id             INT NOT NULL REFERENCES users(id),
-    product_id          INT NOT NULL REFERENCES product(id),
+    user_id             INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    product_id          INT NOT NULL REFERENCES product(id) ON DELETE CASCADE,
     product_quantity    INT NOT NULL
 );
 
 CREATE TABLE orders(
     row                 SERIAL PRIMARY KEY,
     id                  INT NOT NULL,
-    user_id             INT NOT NULL REFERENCES users(id),
-    product_id          INT NOT NULL REFERENCES product(id),
+    user_id             INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    product_id          INT NOT NULL REFERENCES product(id) ON DELETE CASCADE,
     product_quantity    INT NOT NULL,
+    product_price       NUMERIC NOT NULL,
     address             VARCHAR(100) NOT NULL,
     phone               VARCHAR(50) NOT NULL, 
-    status_code         SMALLINT NOT NULL
+    status_code         VARCHAR(50) NOT NULL
 );
 
 CREATE TABLE category(
@@ -63,16 +64,16 @@ CREATE TABLE category(
 
 CREATE TABLE email_verification(
     row                 SERIAL PRIMARY KEY,
-    user_email          VARCHAR (100) NOT NULL UNIQUE REFERENCES users(email),
+    user_email          VARCHAR (100) NOT NULL UNIQUE REFERENCES users(email) ON DELETE CASCADE,
     account_verification VARCHAR(100) NOT NULL UNIQUE
 );
 
 CREATE TABLE forgot_password(
     row                 SERIAL PRIMARY KEY,
-    user_id             INT NOT NULL REFERENCES users(id),
+    user_id             INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     time                TIMESTAMP WITHOUT TIME ZONE,
     password_verification VARCHAR(100) NOT NULL UNIQUE
-);
+); 
 
 
 

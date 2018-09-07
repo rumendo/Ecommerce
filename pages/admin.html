@@ -1,0 +1,78 @@
+<html>
+<head>
+    <title>Bitaka.bg</title>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <style>
+        .col-lg-2, .col-md-3, .col-xs-6{
+            padding-left: 30px;
+            padding-right: 30px;
+        }
+    </style>
+</head>
+<body class="container">
+<div class="page-header">
+    <h1>Bitaka.bg</h1>
+</div>
+
+<nav class="navbar navbar-default">
+    <div class="container-fluid">
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li><a href="/">Home</a></li>
+                <li><a href="/parts">Parts</a></li>
+                <li><a href="/contacts">Contacts</a></li>
+            </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="/admin">Admin</a></li>
+                <li><a href="/logout">Log Out</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<br><br>
+<div class="row">
+
+    <div class="col-lg-2 col-md-3 col-xs-6 col-xs-offset-1">
+        <div class="card" style="width: 200px;">
+            <h2 class="card-title">{{name}}</h2>
+            <form action="/admin/users" method="get">
+                <!--<input name="type" class="btn btn-primary" type="hidden" value="{{type}}"/>-->
+                <input class="card-img-top img-thumbnail" type="image" class="image" alt="Woops" src="/images/user.png"/>
+            </form>
+            <div class="card-body">
+                <p class="card-text">Manage users</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-3 col-xs-6 col-xs-offset-1">
+    <div class="card" style="width: 200px;">
+            <h2 class="card-title">{{name}}</h2>
+            <form action="/admin/products" method="get">
+                <!--<input name="type" class="btn btn-primary" type="hidden" value="{{type}}"/>-->
+                <input class="card-img-top img-thumbnail" type="image" class="image" alt="Woops" src="/images/product.png"/>
+            </form>
+            <div class="card-body">
+                <p class="card-text">Manage products</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-3 col-xs-6 col-xs-offset-1">
+    <div class="card" style="width: 200px;">
+            <h2 class="card-title">{{name}}</h2>
+            <form action="/admin/orders" method="get">
+                <!--<input name="type" class="btn btn-primary" type="hidden" value="{{type}}"/>-->
+                <input class="card-img-top img-thumbnail" type="image" class="image" alt="Woops" src="/images/order.png"/>
+            </form>
+            <div class="card-body">
+                <p class="card-text">Manage orders</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>
