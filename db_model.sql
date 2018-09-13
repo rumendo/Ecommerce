@@ -75,8 +75,17 @@ CREATE TABLE forgot_password(
     password_verification VARCHAR(100) NOT NULL UNIQUE
 ); 
 
-
-
+CREATE TABLE markers(
+    id      INT NOT NULL,
+    name    VARCHAR(60),
+    address VARCHAR(80),
+    lat     FLOAT NOT NULL,
+    lng     FLOAT NOT NULL,
+    type    VARCHAR(30),
+    city    VARCHAR(20),
+    country VARCHAR(20),
+    venue_id VARCHAR(30) NOT NULL UNIQUE
+);
 
 
 

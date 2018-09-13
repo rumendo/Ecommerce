@@ -3,11 +3,20 @@
     <title>Cart</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <!--<script src="/javascripts/quantity_update.js"></script>-->
 </head>
 <body class="container">
 <div class="page-header">
-    <h1>Bitaka.bg</h1>
+    <h1>Bitaka.bg
+        <div class="input-group nav navbar-nav navbar-right" style="width: 300px;">
+            {{#command}}
+            <span style="font-size: 16px">Hello, {{command}}!&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            {{/command}}
+            <span class="input-group-addon">Search: </span>
+            <form action="/search" method="get">
+                <input type="text" class="form-control input-group" id="search" placeholder="Search here" name="search">
+            </form>
+        </div>
+    </h1>
 </div>
 
 <nav class="navbar navbar-default">
@@ -24,10 +33,10 @@
                 <li><a href="/cart">Cart</a></li>
                 <li><a href="/logout">Log Out</a></li>
                 {{/command}}
-                {{^command}}
-                <li><a href="/login">Log In</a></li>
-                <li><a href="/signup">Sign Up</a></li>
-                {{/command}}
+                <!--{{^command}}-->
+                <!--<li><a href="/login">Log In</a></li>-->
+                <!--<li><a href="/signup">Sign Up</a></li>-->
+                <!--{{/command}}-->
             </ul>
         </div><!-- /.navbar-collapse -->
     </div><!-- /.container-fluid -->
@@ -40,16 +49,18 @@
                 <tr>
                     <th>Product</th>
                     <th>Quantity</th>
-                    <th>Price</th>
+                    <th>Price for one</th>
+                    <th>Price for all</th>
                 </tr>
             </thead>
             {{#rows}}
             <tr>
                 <td>{{name}}</td>
-                <td>
-                    <input class="form-control product" value="{{sum}}" type="number" id="quantity{{product_id}}" name="quantity" min="1" max="10" style="width:40%">
+                <td style="width:20%">
+                    <input class="form-control product" value="{{sum}}" type="number" id="quantity{{product_id}}" name="quantity" min="1" max="10" style="width:50%">
                 </td>
-                <td id="price">{{price}}$</td>
+                <td id="single_price" style="width:17%"><p align="right">${{single_price}}</p></td>
+                <td id="price" style="width:15%"><p align="right">${{price}}</p></td>
                 <form action="/rmCart" method="post" id="{{name}}">
                     <input name="pid" id="pid" class="btn btn-primary" type="hidden" value="{{product_id}}"/>
                 </form>
@@ -59,7 +70,7 @@
             </tr>
             {{/rows}}
         </table><br><br>
-        <span style="font-size: 32px; color: #00B7FF; font-weight: bold" id="total">Total: {{oid}}$</span><br><br>
+        <span style="font-size: 32px; color: #00B7FF; font-weight: bold; padding-left:27%;" id="total">Total: {{oid}}$</span><br><br>
 
         {{#rowCount}}
         <a href="/checkout" class="btn btn-primary">Checkout</a>

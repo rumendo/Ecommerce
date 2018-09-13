@@ -12,7 +12,17 @@
 </head>
 <body class="container">
 <div class="page-header">
-    <h1>Bitaka.bg</h1>
+    <h1>Bitaka.bg
+        <div class="input-group nav navbar-nav navbar-right" style="width: 300px;">
+            {{#command}}
+            <span style="font-size: 16px">Hello, {{command}}!&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            {{/command}}
+            <span class="input-group-addon">Search: </span>
+            <form action="/search" method="get">
+                <input type="text" class="form-control input-group" id="search" placeholder="Search here" name="search">
+            </form>
+        </div>
+    </h1>
 </div>
 
 <nav class="navbar navbar-default">
@@ -26,7 +36,9 @@
 
             <ul class="nav navbar-nav navbar-right">
                 {{#command}}
+                {{#is_admin}}
                 <li><a href="/admin">Admin</a></li>
+                {{/is_admin}}
                 <li><a href="/cart">Cart</a></li>
                 <li><a href="/logout">Log Out</a></li>
                 {{/command}}
@@ -58,6 +70,5 @@
     </div>
     {{/rows}}
 </div>
-
 </body>
 </html>

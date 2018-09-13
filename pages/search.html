@@ -1,8 +1,27 @@
+<!DOCTYPE html>
 <html>
 <head>
-    <title>{{#rows}}{{name}}{{/rows}}</title>
+    <title>Bitaka.bg</title>
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <style>
+        .col-lg-2, .col-md-3, .col-xs-6{
+            padding-left: 30px;
+            padding-right: 30px;
+        }
+
+        .img {
+            position: relative;
+            float: left;
+            width:  300px;
+            height: 200px;
+            background-position: 50% 50%;
+            background-repeat:   no-repeat;
+            background-size:     cover;
+        }
+    </style>
+    <script src="/javascripts/main_filters.js"></script>
 </head>
 <body class="container">
 <div class="page-header">
@@ -38,41 +57,33 @@
                 <li><a href="/signup">Sign Up</a></li>
                 {{/command}}
             </ul>
-        </div><!-- /.navbar-collapse -->
-    </div><!-- /.container-fluid -->
+        </div>
+    </div>
 </nav>
-<br><br>
 
-<div class="container" id="product-section">
-    <div class="row">
-        {{#rows}}
-        <div class="col-md-6">
-            <img class="img-thumbnail" src="{{img_path}}" alt="Woops">
-        </div>
-        <div class="col-md-6">
-            <h1>{{name}}</h1>
-            <br>
-           {{long_desc}}
-            {{#command}}
-                <form action="/addCart" method="post"><br><br>
-                    <input class="form-control" value="1" type="number" name="quantity" min="1" max="10" style="width:12%"><br>
+<br><br>
+<div class="row">
+    {{#rows}}
+    <div class="col-lg-2 col-md-3 col-xs-6 col-xs-offset-1">
+        <div class="card" style="width: 200px;">
+            <h5 class="card-title">{{name}}</h5>
+            <img class="card-img-top img-thumbnail img" src="{{img_path}}" alt="Woops">
+            <div class="card-body"><br>
+                <p class="card-text">{{short_desc}}
+                    {{^available_quantity}}
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <span style="font-weight: bold; color: darkred; text-decoration: line-through">{{price}}$</span>
+                    {{/available_quantity}}
+                    <span style="font-weight: bold; color: green">  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{discount}}$</span>
+                </p>
+                <form action="/product" method="get"><br>
                     <input name="id" class="btn btn-primary" type="hidden" value="{{id}}"/>
-                    <input class="btn btn-primary" type="submit" value="Add to cart"/>
-                    <br><br>
-                    {{#addCart}}
-                    <p id="notify">Product added to cart</p>
-                    {{/addCart}}
-            {{/command}}
-            {{^command}}
-                <form action="/login" method="get"><br><br>
-                    <input name="id" class="btn btn-primary" type="hidden" value="{{id}}"/>
-                    <input class="btn btn-primary" type="submit" value="Login to buy"/>
-            {{/command}}
-            </form>
+                    <input class="btn btn-primary" type="submit" value="Learn more!"/>
+                </form>
+            </div>
         </div>
-        {{/rows}}
-        <p id="addCart" hidden>{{addCart}}</p>
-    </div><!-- end row -->
-</div><!-- end container -->
+    </div>
+    {{/rows}}
+</div>
 </body>
 </html>

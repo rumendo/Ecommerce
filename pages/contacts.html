@@ -7,7 +7,17 @@
 </head>
 <body class="container">
 <div class="page-header">
-    <h1>Bitaka.bg</h1>
+    <h1>Bitaka.bg
+        <div class="input-group nav navbar-nav navbar-right" style="width: 300px;">
+            {{#command}}
+            <span style="font-size: 16px">Hello, {{command}}!&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            {{/command}}
+            <span class="input-group-addon">Search: </span>
+            <form action="/search" method="get">
+                <input type="text" class="form-control input-group" id="search" placeholder="Search here" name="search">
+            </form>
+        </div>
+    </h1>
 </div>
 
 <nav class="navbar navbar-default">
@@ -33,40 +43,35 @@
     </div><!-- /.container-fluid -->
 </nav>
 
-<div class="container row">
-    <style>
-        #map {
-            width: 1000px;
-            height: 420px;
-        }
-        #point1x, point1y{
-            display:inline-block;
-        }
-
-    </style>
-    <body onload="readCC();">
-    <form>
-        Country:
-        <input name="country" list="country" id="CC">
-        <datalist id="country"></datalist>
-        City:
-        <input name="city" list="city" id="cities">
-        <datalist id="city"></datalist>
-        Search by area:
-    </form>
-    <form>
-        <input name="point1x" list="point1x" id="point1x" placeholder="First point Latitude">
-        <datalist id="point1x"></datalist>
-        <input name="point1y" list="point1y" id="point1y" placeholder="First point Longitude">
-        <datalist id="point1y"></datalist>
-        <input name="point2x" list="point2x" id="point2x" placeholder="Second point Latitude">
-        <datalist id="point2x"></datalist>
-        <input name="point2y" list="point2y" id="point2y" placeholder="Second point Longitude">
-        <datalist id="point2y"></datalist>
-        <input type="button" id="submit" value="Submit">
-    </form>
-    <div id="countryList"></div>
-    <div id="map"></div>s
+<div class="container">
+    <div class="row">
+        <div onload="initMap('http://localhost:3000/contacts/map?loadAll=1');">
+            <form>
+                Country:
+                <input name="country" list="country" id="CC">
+                <datalist id="country">
+                    <option value="Bulgaria"></option>
+                </datalist>
+                City:
+                <input name="city" list="city" id="cities">
+                <datalist id="city"></datalist>
+            </form>
+            <div id="countryList"></div>
+            <div id="map" style="width: 500px; height: 420px;" class="col-xs-6"></div>
+            <div class="col-xs-6">
+                <p>
+                    About us:<br><br>
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                    Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                    Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+                    Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                    <br><br>
+                    Phone: ********<br>
+                    Email: ********
+                </p>
+            </div>
+        </div>
+    </div>
 <!-- Add map on the left and info on the right. -->
 </div>
 <script async defer

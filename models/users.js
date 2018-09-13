@@ -36,6 +36,26 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false
+    },
+    phone: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: false
+    },
+    is_verified: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
+    },
+    city: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: false
+    },
+    country: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: false
     }
   }, {
     tableName: 'users'

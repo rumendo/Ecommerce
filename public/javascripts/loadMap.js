@@ -4,31 +4,21 @@ var latCenter = 42.688058;
 var lngCenter = 23.319961;
 var url;
 
-function readCC(){
-  url = 'http://localhost:3000/?load=1';
-  downloadUrl(url, function(result) {
-    displayCC(result);
-  });
-  url = 'http://localhost:3000/?loadAll=1';
-  console.log(url);
-  initMap(url);
-}
+// function readCC(){
+//   url = 'http://localhost:3000/?load=1';
+//   downloadUrl(url, function(result) {
+//     displayCC(result);
+//   });
+//   url = 'http://localhost:3000/?loadAll=1';
+//   console.log(url);
+//   initMap(url);
+// }
 
-$("#submit").on('click', function(e){
-  var url = 'http://localhost:3000/?';
+$("#cities").on('input', function(){
+  var url = 'http://localhost:3000/contacts/map?';
   document.getElementById("error").innerHTML="";
   selCountry = $("#CC").val();
   selCity = $("#cities").val();
-  point1x = $("#point1x").val();
-  point1y = $("#point1y").val();
-  point2x = $("#point2x").val();
-  point2y = $("#point2y").val();
-  if(point1x || point1y || point2x || point2y){
-    if(point1x && point1y && point2x && point2y)
-      url += '&point1x=' + point1x + '&point1y=' + point1y + '&point2x=' + point2x+ '&point2y=' + point2y;
-    else
-      document.getElementById("error").innerHTML="<br>Input coordinates not set correctly.";
-  }
   if(selCountry){
     url += '&selCountry=' + selCountry;
   }
@@ -38,15 +28,11 @@ $("#submit").on('click', function(e){
   initMap(url);
 });
 
-$("#remove_filters").on('click', function(e){
-  location.reload();
-});
-
 
 function initMap(url) {
   var map = new google.maps.Map(document.getElementById('map'), {
     center: new google.maps.LatLng(latCenter, lngCenter),
-    zoom: 10
+    zoom: 11
   });
   var infoWindow = new google.maps.InfoWindow;
   console.log(url);
@@ -101,16 +87,16 @@ function encodeQueryData(data) {
   return ret.join('&');
 }
 
-function displayCC(result){
-  var options = '';
-  Array.prototype.forEach.call(result, function(element){
-    options += '<option value="'+element+'"/>';
-  });
-  document.getElementById('country').innerHTML = options;
-}
+// function displayCC(result){
+//   var options = '';
+//   Array.prototype.forEach.call(result, function(element){
+//     options += '<option value="'+element+'"/>';
+//   });
+//   document.getElementById('country').innerHTML = options;
+// }
 
 function readCities(country){
-  var url = 'http://localhost:3000/?country=' + country;
+  var url = 'http://localhost:3000/contacts/map?country=' + country;
   downloadUrl(url, function(result) {
     displayCities(result);
   });
@@ -128,6 +114,7 @@ timer2 = 0;
 function selectCountry (){
   readCities(selCountry);
 }
+
 $("#CC").on('input', function(e){
   selCountry = this.value;
     if (timer2) {

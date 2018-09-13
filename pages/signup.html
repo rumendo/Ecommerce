@@ -1,11 +1,22 @@
 <html>
 <head>
     <title>Bitaka Sign Up</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 </head>
 <body class="container">
 <div class="page-header">
-    <h1>Bitaka.bg</h1>
+    <h1>Bitaka.bg
+        <div class="input-group nav navbar-nav navbar-right" style="width: 300px;">
+            {{#command}}
+            <span style="font-size: 16px">Hello, {{command}}!&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            {{/command}}
+            <span class="input-group-addon">Search: </span>
+            <form action="/search" method="get">
+                <input type="text" class="form-control input-group" id="search" placeholder="Search here" name="search">
+            </form>
+        </div>
+    </h1>
 </div>
 
 <nav class="navbar navbar-default">
@@ -29,35 +40,52 @@
     <div class="jumbotron col-sm-5 pull-center">
         <form action="/signup" method="post">
             <div class="form-group">
-                <label>Fist name</label>
-                <input type="text" class="form-control" name="first_name" placeholder="Enter your first name">
+                <label>First name</label>
+                <input id="first_name" type="text" class="form-control" name="first_name" placeholder="Enter your first name">
+                <span id="first_name_err"></span>
             </div>
             <div class="form-group">
                 <label>Last name</label>
-                <input type="text" class="form-control" name="last_name" placeholder="Enter your last name">
+                <input id="last_name" type="text" class="form-control" name="last_name" placeholder="Enter your last name">
+                <span id="last_name_err"></span>
+
             </div>
             <div class="form-group">
                 <label>Email address</label>
-                <input type="email" class="form-control" name="email" aria-describedby="emailHelp" placeholder="Enter your email address">
+                <input id="email" type="email" class="form-control" name="email" aria-describedby="emailHelp" placeholder="Enter your email address">
+                <span id="email_err"></span>
             </div>
             <div class="form-group">
                 <label>Password</label>
-                <input type="password" class="form-control" name="password" placeholder="Choose a password">
+                <input id="password" type="password" class="form-control" name="password" placeholder="Choose a password">
+                <span id="password_err"></span>
             </div>
             <div class="form-group">
                 <label>Confirm password</label>
                 <input type="password" class="form-control" name="passwordConfirm" placeholder="Confirm your password">
             </div>
             <div class="form-group">
+                <label>Country</label>
+                <input id="country" type="text" class="form-control" name="country" placeholder="Enter the country you live in">
+                <span id="country_err"></span>
+            </div>
+            <div class="form-group">
+                <label>City</label>
+                <input id="city" type="text" class="form-control" name="city" placeholder="Enter the city you live in">
+                <span id="city_err"></span>
+            </div>
+            <div class="form-group">
                 <label>Address for deliveries</label>
-                <input type="text" class="form-control" name="address" placeholder="Choose an address for deliveries">
+                <input id="address" type="text" class="form-control" name="address" placeholder="Choose an address for deliveries">
+                <span id="address_err"></span>
             </div>
             <div class="form-group">
                 <label>Phone number for deliveries</label>
-                <input type="text" class="form-control" name="phone" placeholder="Enter a phone number for deliveries">
+                <input id="phone" type="text" class="form-control" name="phone" placeholder="Enter a phone number for deliveries">
+                <span id="phone_err"></span>
             </div>
             <div>
-                <input class="btn btn-primary" type="submit" value="Sign Up"/>
+                <input id="signup_button" class="btn btn-primary" type="submit" value="Sign Up"/>
             </div>
         </form>
         <div>
@@ -67,3 +95,4 @@
 </div>
 </body>
 </html>
+<script src="/javascripts/signup.js"></script>

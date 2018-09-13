@@ -9,6 +9,7 @@ var mustacheExpress = require('mustache-express');
 var nodemailer = require('nodemailer');
 var bcrypt = require('bcrypt');
 var sha256 = require('js-sha256');
+var fs = require('fs');
 
 var User = require('./models/user');
 var app = express();
@@ -46,7 +47,7 @@ app.use(session({
 // middleware function to check for logged-in users
 var sessionChecker = (req, res, next) => {
     if (req.session.user && req.cookies.user_sid) {
-        res.redirect('/homepage');
+        res.redirect('/');
     } else {
         next();
     }
@@ -59,6 +60,11 @@ app.get('/', (req, res) => {
         console.log(products);
         if (!(req.session.user && req.cookies.user_sid)) {
             products["command"] = '';
+        }else {
+            products["command"] = req.session.user.first_name;
+            if (req.session.user.is_admin) {
+                products['is_admin'] = '1';
+            }
         }
         products.rows.forEach(function (product, index, rows) {
             rows[index]["discount"] = product["price"] * (100-product["discount"]) / 100;
@@ -76,11 +82,19 @@ app.get('/admin/orders/changeStatusCode', (req, res) => {
         res.render('error');
         return;
     }
+
     console.log(req.param('code'));
     console.log(req.param('oid'));
     changeStatusCode(req.param('oid'), req.param('code'))
         .then(function (orders) {
             console.log(orders);
+            var mailOptions = {
+                from: 'bitaka.ecommerce@gmail.com',
+                to: req.session.user.email,
+                subject: 'Order Status Update - Bitaka.bg',
+                text: 'The status of your ' + req.param('oid') + ' order has been changed to: ' + req.param('code')
+            };
+            sendMail(mailOptions);
             res.render('admin_orders', orders);
         })
         .catch(error => {
@@ -210,23 +224,23 @@ app.route('/admin/products/addProduct')
     });
 
 
-// route for removing products
-app.get('/admin/products/rmProduct', (req, res) => {
-    console.log(req.session.user);
-    if (!req.session.user.is_admin) {
-        res.render('error');
-        return;
-    }
-
-    rmProduct(req.param('rmProduct'))
-        .then(function (result) {
-            console.log(result);
-            res.redirect('/admin/products');
-        })
-        .catch(error => {
-            console.log(error);
-        });
-});
+// // route for removing products
+// app.get('/admin/products/rmProduct', (req, res) => {
+//     console.log(req.session.user);
+//     if (!req.session.user.is_admin) {
+//         res.render('error');
+//         return;
+//     }
+//
+//     rmProduct(req.param('rmProduct'))
+//         .then(function (result) {
+//             console.log(result);
+//             res.redirect('/admin/products');
+//         })
+//         .catch(error => {
+//             console.log(error);
+//         });
+// });
 
 // route for showing a product
 app.get('/admin/products/show', (req, res) => {
@@ -345,6 +359,10 @@ app.get('/admin/users', (req, res) => {
 
     getAllUsers()
         .then(function (users) {
+            console.log(users);
+            users.rows.forEach(function (user, index, usersArray) {
+                usersArray[index].createdAt = JSON.stringify(user.createdAt).slice(1, 11);
+            });
             res.render('admin_users', users);
         })
         .catch(error => {
@@ -353,26 +371,95 @@ app.get('/admin/users', (req, res) => {
 
 });
 
+// route for user Login
+app.route('/admin/login')
+    .get(sessionChecker, (req, res) => {
+        console.log(req.param('id'));
+        if(req.param('notLogged')){
+            res.render('admin', {notLogged:1});
+            return;
+        }
+        if(req.param('registered')){
+            res.render('admin', {
+                id : req.param('id'),
+                registered: true
+            });
+        } else {
+            res.render('admin_login', {id:req.param('id')});
+        }
+    })
+    .post((req, res) => {
+        var email = req.body.email,
+            password = req.body.password;
+
+        checkVerification(req.body.email).then(function (is_verified) {
+            if(is_verified.rowCount) {
+                User.findOne({where: {email: email}}).then(function (user) {
+                    console.log(user);
+                    if (!user) {
+                        res.render('admin_login', {
+                            id: req.param('id'),
+                            error: 'Incorrect email address or password!'
+                        });
+                    } else if (!user.validPassword(password)) {
+                        res.render('admin_login', {
+                            id: req.param('id'),
+                            error: 'Incorrect email address or password!'
+                        });
+                    } else {
+                        req.session.user = user.dataValues;
+                        if (req.param('id')) {
+                            res.redirect('/product' + '?id=' + req.param('id'));
+                            return;
+                        }
+                        res.redirect('/admin');
+                        return;
+                    }
+                });
+            }else {
+                res.render('admin_login', {
+                    error: "You need to activate account before logging in. You can find the activation link in your email inbox or spam folder."
+                });
+            }
+        });
+
+    });
+
+
 // route for admin menu
 app.get('/admin', (req, res) => {
-    console.log(req.session.user);
     if (!req.session.user.is_admin) {
         res.render('error');
         return;
     }
-
     res.render('admin');
-
 });
 
-// route for Homepage
+// route for parts page
 app.get('/parts', (req, res) => {
     getParts().then(function (parts) {
         console.log(parts);
         if (!(req.session.user && req.cookies.user_sid)) {
             parts["command"] = '';
+        }else {
+            parts["command"] = req.session.user.first_name;
+
         }
         res.render('parts', parts);
+    });
+});
+
+// route for Homepage
+app.get('/search', (req, res) => {
+    searchProducts(req.param('search')).then(function (result) {
+        console.log(result);
+        if (!(req.session.user && req.cookies.user_sid)) {
+            result["command"] = '';
+        }else {
+            result["command"] = req.session.user.first_name;
+
+        }
+        res.render('search',  partsRender(result, req));
     });
 });
 
@@ -402,14 +489,80 @@ app.get('/parts/search', function(req, res){
 
         console.log(manufacturers);
 
-        filterProducts(req.param('type'), manufacturers, minPrice, maxPrice)
-            .then(function (products) {
-            console.log(products);
-            res.render('fork', partsRender(products, req));
-            })
-            .catch(error => {
-                console.log(error);
+        if(manufacturers !== '}') {
+            filterProducts(req.param('type'), manufacturers, minPrice, maxPrice)
+                .then(function (products) {
+
+                    console.log(products);
+                    res.render('fork', partsRender(products, req));
+                })
+                .catch(error => {
+                    console.log(error);
+                });
+        }
+    });
+});
+
+// route returning a list of AllManufacturers
+app.get('/parts/searchAll', function(req, res){
+    getAllManufacturers().then(function (allManufacturers) {
+        var minPrice = req.param('minPrice');
+        var maxPrice = req.param('maxPrice');
+        var manufacturers = "";
+        if(req.param('manufacturer')) {
+            manufacturers = req.param('manufacturer');
+            manufacturers = JSON.stringify(manufacturers);
+            manufacturers = '{' + manufacturers.slice(1);
+            manufacturers = manufacturers.slice(0, -1) + '}';
+        }else {
+            manufacturers = '{';
+            allManufacturers.rows.forEach(function (manufacturer) {
+                console.log(manufacturer.manufacturer);
+                manufacturers += '"' + manufacturer.manufacturer + '", ';
             });
+            manufacturers = manufacturers.slice(0, -2) + '}';
+        }
+        if(!minPrice)
+            minPrice = '0';
+        if(!maxPrice)
+            maxPrice = '2147483647';
+
+        console.log(manufacturers);
+
+        if(manufacturers !== '}') {
+            filterAllProducts(manufacturers, minPrice, maxPrice)
+                .then(function (products) {
+                    console.log(products);
+                    var types = [];
+                    products.rows.forEach(function (product) {
+                        if(!types.includes(product.type)){
+                            types.push(product.type);
+                        }
+                    });
+                    types = JSON.stringify(types);
+                    types = '{' + types.slice(1);
+                    types = types.slice(0, -1) + '}';
+                    console.log(types);
+                    console.log("SELECT * FROM category WHERE type=ANY('" + types +"')");
+                    filterTypes(types)
+                        .then(function (parts) {
+                            console.log(parts);
+                            if (!(req.session.user && req.cookies.user_sid)) {
+                                parts["command"] = '';
+                            }else {
+                                parts["command"] = req.session.user.first_name;
+
+                            }
+                            res.render('parts', parts);
+                        })
+                        .catch(error => {
+                            console.log(error);
+                        });
+                })
+                .catch(error => {
+                    console.log(error);
+                });
+        }
     });
 });
 
@@ -419,18 +572,98 @@ app.get('/parts/*', (req, res) => {
     });
 });
 
+// route for map page
+app.get('/contacts/map', (req, res) => {
+    var countryList = [];
+    var linesArray = fs.readFileSync('countryCodes.txt', 'utf-8');
+    linesArray = linesArray.split('\n');
+    var n=0;
+    Array.prototype.forEach.call(linesArray, function(line){
+        var newLine = line.split(/[ ]{2,}/);
+        countryList[n] = newLine;
+        n++;
+    });
 
-// route for contacts page
-app.get('/contacts', (req, res) => {
+    if(req.param('loadAll')){
+        client.query('SELECT * FROM markers')
+            .then(function (result) {
+                console.log(result);
+                res.send(result);
+            })
+            .catch(error => {
+                console.log(error);
+            });
+        return;
+    }
+
+    if(req.param('country')){
+        client.query('SELECT DISTINCT city FROM markers WHERE country = ' + nameToCC(req.param('country')) + ";")
+            .then(function (result) {
+            var cities = [];
+            var i=0;
+            Array.prototype.forEach.call(result, function(element){
+                cities[i] = element.city;
+                i++;
+            });
+            cities.sort();
+            res.send(cities);
+            })
+            .catch(error => {
+                console.log(error);
+            });
+        return;
+    }
+
+    var query = 'SELECT * FROM markers WHERE 1';
+
+    if(req.param('selCountry')){
+        query += " && country = '" + nameToCC(req.param('selCountry')) + "'";
+        console.log(query);
+    }
+    if(req.param('selCity')){
+        query += "&& city = '" + [req.param('selCity')] + "'";
+        console.log(query);
+    }
+    if(req.param('selCountry') || req.param('selCity')){
+        client.query(query)
+            .then(function (result) {
+                if (err) throw err;
+                res.send(result);
+            })
+            .catch(error => {
+                console.log(error);
+            });
+        return;
+    }
+
     if (req.session.user && req.cookies.user_sid) {
         var products = {"command":"Logged"};
     }
     res.render('contacts', products);
 });
 
+// route for contacts page
+app.get('/contacts', (req, res) => {
+    var products = {};
+    if (!(req.session.user && req.cookies.user_sid)) {
+        products["command"] = '';
+    }else {
+        products["command"] = req.session.user.first_name;
+    }
+
+    res.render('contacts', products);
+});
+
 // route returning a list of manufacturers
 app.get('/filter/manufacturers/*', function(req, res){
     getManufacturers(req.params[0]).then(function (manufacturers) {
+        res.send(manufacturers);
+    });
+});
+
+// route returning a list of manufacturers
+app.get('/filter/allManufacturers', function(req, res){
+    getAllManufacturers().then(function (manufacturers) {
         res.send(manufacturers);
     });
 });
@@ -448,6 +681,8 @@ app.get('/product', function(req, res){
     getProduct(req.param('id')).then(function (product) {
         if (!(req.session.user && req.cookies.user_sid)) {
             product["command"] = '';
+        }else {
+            product["command"] = req.session.user.first_name;
         }
         product.rowCount = product.rows[0]["name"];
         res.render('product', product);
@@ -459,6 +694,8 @@ app.post('/addCart', function(req, res){
     getProduct(req.param('id')).then(function (product) {
         if (!(req.session.user && req.cookies.user_sid)) {
             product["command"] = '';
+        }else {
+            product["command"] = req.session.user.first_name;
         }
         console.log(req.session.user.id);
         addToCart(req.session.user.id, req.param('id'), req.param('quantity')).then(function (response) {
@@ -483,10 +720,11 @@ app.post('/rmCart', function(req, res){
 
 // route for cart page
 app.get('/cart', (req, res) => {
+    if (!(req.session.user && req.cookies.user_sid)) {
+        res.redirect('/login?notLogged=1');
+    }
     getCart(req.session.user.id).then(function (products) {
-        if (!(req.session.user && req.cookies.user_sid)) {
-            products["command"] = '';
-        }
+        products["command"] = req.session.user.first_name;
         console.log(products);
         if(!products.rowCount){
             res.render('cart', products);
@@ -496,7 +734,10 @@ app.get('/cart', (req, res) => {
         products.rows.forEach(function (product, index, rows) {
             rows[index]["price"] = product["price"] * product["sum"] * (100-product["discount"]) / 100;
             products.oid += rows[index]["price"];
+            rows[index]["single_price"] = rows[index]["price"] / rows[index]["sum"];
+            console.log(typeof(rows[index]["single_price"]));
             rows[index]["price"] = rows[index]["price"].toFixed(2);
+            rows[index]["single_price"] = rows[index]["single_price"].toFixed(2);
         });
         products.oid = products.oid.toFixed(2);
         console.log(products);
@@ -596,7 +837,9 @@ app.route('/signup')
             email: req.body.email,
             password: req.body.password,
             address: req.body.address,
-            phone: req.body.phone
+            phone: req.body.phone,
+            city: req.body.city,
+            country: req.body.country
         })
             .then(user => {
                 console.log(user.dataValues);
@@ -614,6 +857,10 @@ app.route('/signup')
 app.route('/login')
     .get(sessionChecker, (req, res) => {
         console.log(req.param('id'));
+        if(req.param('notLogged')){
+            res.render('login', {notLogged:1});
+            return;
+        }
         if(req.param('registered')){
             res.render('login', {
                 id : req.param('id'),
@@ -696,7 +943,7 @@ app.post('/resetPassword', (req, res) => {
     console.log(req.param('email'));
     accountPasswordReset(req.param('email'));
     res.render('login', {
-        error: 'Check your email..'
+        error: 'An email has been sent to your inbox. It contains a link that will expire in two hours..'
     });
 });
 
@@ -784,9 +1031,9 @@ function addProduct(id, name, price, discount, short_desc, long_desc, available_
     return client.query("INSERT INTO product (id, name, price, discount, short_desc, long_desc, img_path, available_quantity, type, manufacturer, is_hidden) VALUES (" + id +" , '" + name + "', " + price + ", " + discount + ", '" + short_desc + "', '" + long_desc + "', '" + img + "', " + available_quantity + ", '" + type + "', '" + manufacturer + "', '" + is_hidden + "');");
 }
 
-function rmProduct(pid) {
-    return client.query("DELETE FROM product WHERE id = " + pid + ";");
-}
+// function rmProduct(pid) {
+//     return client.query("DELETE FROM product WHERE id = " + pid + ";");
+// }
 
 function showProduct(pid) {
     return client.query("UPDATE product SET is_hidden = 'false' WHERE id = " + pid + ";");
@@ -804,12 +1051,12 @@ function rmAdmin(uid) {
     return client.query("UPDATE users SET is_admin = 'false' WHERE id = " + uid + ";");
 }
 
-function rmUser(uid) {
-    return client.query("DELETE FROM users WHERE id = " + uid + ";");
-}
+// function rmUser(uid) {
+//     return client.query("DELETE FROM users WHERE id = " + uid + ";");
+// }
 
 function getAllUsers() {
-    return client.query("SELECT * FROM users;");
+    return client.query("SELECT * FROM users WHERE NOT is_admin;");
 }
 
 function getAllProducts() {
@@ -828,9 +1075,25 @@ function filterProducts(type, manufacturers, minPrice, maxPrice){
         "') ORDER BY discount DESC;");
 }
 
+function filterAllProducts(manufacturers, minPrice, maxPrice) {
+    return client.query("SELECT * FROM product WHERE available_quantity > 0 AND NOT is_hidden" +
+        " AND price*(100-discount)/100>=" + minPrice +
+        " AND price*(100-discount)/100<=" + maxPrice +
+        " AND manufacturer=ANY('" + manufacturers +
+        "') ORDER BY discount DESC;");
+}
+
+function filterTypes(types) {
+    return client.query("SELECT * FROM category WHERE type=ANY('" + types +"')");
+}
+
 //AND manufacturer=ANY(" + manufacturers + ")
 function getManufacturers(type){
     return client.query("SELECT DISTINCT manufacturer FROM product WHERE type = '" + type + "';");
+}
+
+function getAllManufacturers(){
+    return client.query("SELECT DISTINCT manufacturer FROM product;");
 }
 
 function quantityUpdate(quantity, uid, pid) {
@@ -844,6 +1107,10 @@ function availableQuantityUpdate(quantity, pid) {
 // function getPrices(type){
 //     return client.query("SELECT price, discount FROM product WHERE type = '" + type + "';");
 // }
+
+function searchProducts(query) {
+    return client.query("SELECT * FROM product WHERE name LIKE'%" + query + "%' OR short_desc LIKE '%" + query + "%' OR long_desc LIKE '%" + query + "%'");
+}
 
 function getParts(){
     return client.query("SELECT * FROM category");
@@ -948,16 +1215,21 @@ function changeStatusCode(oid, code) {
 function partsRender(products, req){
     if (!(req.session.user && req.cookies.user_sid)) {
         products["command"] = '';
+    }else {
+        products["command"] = req.session.user.first_name;
+
     }
     products.rows.forEach(function (product, index, rows) {
         if(product["discount"]>0)
             rows[index]["available_quantity"] = '';
     });
     products.rows.forEach(function (product, index, rows) {
-        if(product["discount"])
+        if(product["discount"]) {
             rows[index]["discount"] = product["price"] * (100 - product["discount"]) / 100;
-        else
+        }
+        else {
             rows[index]["discount"] = rows[index]["price"];
+        }
         rows[index]["discount"] = rows[index]["discount"].toFixed(2);
     });
     products.oid = req.param('type');
@@ -1035,6 +1307,7 @@ function passwordChangedEmail(email) {
 }
 
 
+
 function sendMail(mailOptions) {
     transporter.sendMail(mailOptions, function(error, info) {
         if (error) {
@@ -1061,6 +1334,16 @@ function guid() {
             .substring(1);
     }
     return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+}
+
+function nameToCC(selCountry){
+    var selectedCountry = '';
+    Array.prototype.forEach.call(countryList, function(country){
+        if(selCountry==country[0]){
+            selectedCountry = country[1];
+        }
+    });
+    return selectedCountry;
 }
 
 // function getTypes() {
