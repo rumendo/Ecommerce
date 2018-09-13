@@ -45,6 +45,8 @@
                     <th>First name</th>
                     <th>Last name</th>
                     <th>Email Address</th>
+                    <th>Country</th>
+                    <th>City</th>
                     <th>Address</th>
                     <th>Phone</th>
                     <th>Registration date</th>
@@ -54,11 +56,27 @@
             {{#rows}}
             <tr>
                 <td>{{id}}</td>
-                <td>{{first_name}}</td>
-                <td>{{last_name}}</td>
-                <td>{{email}}</td>
-                <td>{{address}}</td>
-                <td>{{phone}}</td>
+                <td>
+                    <input class="form-control first_name" data-id="{{id}}" data-attribute="first_name" title="{{first_name}}" value="{{first_name}}" type="text">
+                </td>
+                <td>
+                    <input class="form-control last_name" data-id="{{id}}" data-attribute="last_name" title="{{last_name}}" value="{{last_name}}" type="text">
+                </td>
+                <td>
+                    <input class="form-control email" data-id="{{id}}" data-attribute="email" title="{{email}}" value="{{email}}" type="text">
+                </td>
+                <td>
+                    <input class="form-control country" data-id="{{id}}" data-attribute="country" title="{{country}}" value="{{country}}" type="text">
+                </td>
+                <td>
+                    <input class="form-control city" data-id="{{id}}" data-attribute="city" title="{{city}}" value="{{city}}" type="text">
+                </td>
+                <td>
+                    <input class="form-control address" data-id="{{id}}" data-attribute="address" title="{{address}}" value="{{address}}" type="text">
+                </td>
+                <td>
+                    <input class="form-control phone" data-id="{{id}}" data-attribute="phone" title="{{phone}}" value="{{phone}}" type="text">
+                </td>
                 <td>{{createdAt}}</td>
                 <td>{{is_verified}}</td>
                 <form action="/admin/users/rmAdmin" method="get" id="{{id}}">
@@ -88,3 +106,4 @@
 </div>
 </body>
 </html>
+<script src="/javascripts/user_data_change.js"></script>

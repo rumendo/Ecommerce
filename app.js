@@ -745,10 +745,25 @@ app.get('/cart', (req, res) => {
     });
 });
 
+app.get('/userDataChange', function (req, res) {
+    console.log("UPDATE users SET " + req.param('attribute') + "='" + req.param('data') + "' WHERE id=" + req.param('uid') + ";");
+    userDataChange(req.param('attribute'), req.param('data'), req.param('uid'))
+        .then(function (result) {
+        res.send(result);
+        })
+        .catch(error =>{
+            console.log(error);
+        });
+});
+
 app.get('/quantityUpdate', function (req, res) {
-    quantityUpdate(req.param('quantity'), req.session.user.id, req.param('pid')).then(function (price) {
+    quantityUpdate(req.param('quantity'), req.session.user.id, req.param('pid'))
+        .then(function (price) {
         res.send(price);
-    })
+         })
+        .catch(error =>{
+            console.log(error);
+        });
 });
 
 app.get('/admin/products/availableQuantityUpdate', function (req, res) {
@@ -1102,6 +1117,10 @@ function quantityUpdate(quantity, uid, pid) {
 
 function availableQuantityUpdate(quantity, pid) {
     return client.query("UPDATE product SET available_quantity=" + quantity + " WHERE id=" + pid + ";");
+}
+
+function userDataChange(attribute, data, uid){
+    return client.query("UPDATE users SET " + attribute + "='" + data + "' WHERE id=" + uid + ";");
 }
 
 // function getPrices(type){

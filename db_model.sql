@@ -7,12 +7,14 @@ CREATE TABLE users(
     first_name  VARCHAR(50) NOT NULL,
     last_name   VARCHAR(50) NOT NULL,
     address     VARCHAR(100) NOT NULL,
+    country     VARCHAR(75) NOT NULL,
+    city        VARCHAR(50) NOT NULL,
     phone       VARCHAR(50) NOT NULL,
     is_admin    BOOLEAN NOT NULL DEFAULT FALSE,
     is_verified BOOLEAN NOT NULL DEFAULT FALSE,
     createdAt   TIMESTAMP WITH TIME ZONE,
     updatedAt   TIMESTAMP WITH TIME ZONE
-);
+ );
 
 CREATE TABLE product(
     id              SERIAL PRIMARY KEY,
@@ -70,7 +72,7 @@ CREATE TABLE email_verification(
 
 CREATE TABLE forgot_password(
     row                 SERIAL PRIMARY KEY,
-    user_id             INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_email             INT NOT NULL REFERENCES users(email) ON DELETE CASCADE,
     time                TIMESTAMP WITHOUT TIME ZONE,
     password_verification VARCHAR(100) NOT NULL UNIQUE
 ); 
