@@ -84,10 +84,10 @@
                 </form>
                 <form action="/admin/users/makeAdmin" method="get" id="{{id}}2">
                     <input name="makeAdmin" class="btn btn-primary" type="hidden" value="{{id}}"/>
-                </form>
-                <form action="/admin/users/rmUser" method="get" id="{{id}}3">
-                    <input name="rmUser" class="btn btn-primary" type="hidden" value="{{id}}"/>
-                </form>
+                <!--</form>-->
+                <!--<form action="/admin/users/rmUser" method="get" id="{{id}}3">-->
+                    <!--<input name="rmUser" class="btn btn-primary" type="hidden" value="{{id}}"/>-->
+                <!--</form>-->
                 <td>
                     {{#is_admin}}
                     <input class="btn btn-primary" type="submit" value="Remove admin" form="{{id}}"/>
@@ -96,9 +96,9 @@
                     <input class="btn btn-primary" type="submit" value="Make admin" form="{{id}}2"/>
                     {{/is_admin}}
                 </td>
-                <td>
-                    <input class="btn btn-primary" type="submit" value="Remove user" form="{{id}}3"/>
-                </td>
+                <!--<td>-->
+                    <!--<input class="btn btn-primary" type="submit" value="Remove user" form="{{id}}3"/>-->
+                <!--</td>-->
             </tr>
             {{/rows}}
         </table>

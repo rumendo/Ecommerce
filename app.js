@@ -95,6 +95,7 @@ app.get('/admin/orders/changeStatusCode', (req, res) => {
                 text: 'The status of your ' + req.param('oid') + ' order has been changed to: ' + req.param('code')
             };
             sendMail(mailOptions);
+            orders["command"] = req.session.user.first_name;
             res.render('admin_orders', orders);
         })
         .catch(error => {
@@ -115,6 +116,7 @@ app.get('/admin/orders/order', (req, res) => {
     orderDetails(req.param('id'))
         .then(function (products) {
             console.log(products);
+            products["command"] = req.session.user.first_name;
             res.render('admin_order_products', products);
         })
         .catch(error => {
@@ -134,6 +136,7 @@ app.get('/admin/orders/cancel', (req, res) => {
 
     cancelOrder(req.param('id'))
         .then(function (orders) {
+            orders["command"] = req.session.user.first_name;
             res.render('admin_orders', orders);
         })
         .catch(error => {
@@ -154,6 +157,7 @@ app.get('/admin/orders', (req, res) => {
         getUserOrders(req.param('uid'))
             .then(function (orders) {
                 console.log(orders);
+                orders["command"] = req.session.user.first_name;
                 res.render('admin_orders', orders);
                 return;
             })
@@ -166,6 +170,7 @@ app.get('/admin/orders', (req, res) => {
     getAllOrders()
         .then(function (orders) {
             console.log(orders);
+            orders["command"] = req.session.user.first_name;
             res.render('admin_orders', orders);
         })
         .catch(error => {
@@ -288,6 +293,7 @@ app.get('/admin/products', (req, res) => {
 
     getAllProducts()
         .then(function (products) {
+            products["command"] = req.session.user.first_name;
             res.render('admin_products', products);
         })
         .catch(error => {
@@ -331,23 +337,23 @@ app.get('/admin/users/rmAdmin', (req, res) => {
         });
 });
 
-// route for removing users
-app.get('/admin/users/rmUser', (req, res) => {
-    console.log(req.session.user);
-    if (!req.session.user.is_admin) {
-        res.render('error');
-        return;
-    }
-
-    rmUser(req.param('rmUser'))
-        .then(function (result) {
-            console.log(result);
-            res.redirect('/admin/users');
-        })
-        .catch(error => {
-            console.log(error);
-        });
-});
+// // route for removing users
+// app.get('/admin/users/rmUser', (req, res) => {
+//     console.log(req.session.user);
+//     if (!req.session.user.is_admin) {
+//         res.render('error');
+//         return;
+//     }
+//
+//     rmUser(req.param('rmUser'))
+//         .then(function (result) {
+//             console.log(result);
+//             res.redirect('/admin/users');
+//         })
+//         .catch(error => {
+//             console.log(error);
+//         });
+// });
 
 // route for managing users
 app.get('/admin/users', (req, res) => {
@@ -363,6 +369,7 @@ app.get('/admin/users', (req, res) => {
             users.rows.forEach(function (user, index, usersArray) {
                 usersArray[index].createdAt = JSON.stringify(user.createdAt).slice(1, 11);
             });
+            users["command"] = req.session.user.first_name;
             res.render('admin_users', users);
         })
         .catch(error => {
@@ -745,17 +752,6 @@ app.get('/cart', (req, res) => {
     });
 });
 
-app.get('/userDataChange', function (req, res) {
-    console.log("UPDATE users SET " + req.param('attribute') + "='" + req.param('data') + "' WHERE id=" + req.param('uid') + ";");
-    userDataChange(req.param('attribute'), req.param('data'), req.param('uid'))
-        .then(function (result) {
-        res.send(result);
-        })
-        .catch(error =>{
-            console.log(error);
-        });
-});
-
 app.get('/quantityUpdate', function (req, res) {
     quantityUpdate(req.param('quantity'), req.session.user.id, req.param('pid'))
         .then(function (price) {
@@ -843,7 +839,6 @@ app.route('/signup')
                 res.render('signup', {
                     error: "A user with the email address you specified already exists"
                 });
-                return;
             }
         });
         User.create({
@@ -921,6 +916,55 @@ app.route('/login')
         });
 
     });
+
+
+
+// route for user data
+app.get('/userData', function (req, res) {
+    getUser(req.session.user.id).then(function (user) {
+        if (!(req.session.user && req.cookies.user_sid)) {
+            user["command"] = '';
+        }else {
+            user["command"] = req.session.user.first_name;
+        }
+        if(req.param('error')){
+            user.error = 'Invalid password!';
+        }
+        res.render('user_data', user);
+    });
+});
+app.post('/userData', function (req, res) {
+    console.log(req.body);
+    if(req.body.password==='asdasd'){
+        res.redirect('/userData?error=invalidPassword');
+        return;
+    }
+    for (var key in req.body) {
+        if (req.body.hasOwnProperty(key) && key !== 'password') {
+            userDataChange(key, req.body[key], req.session.user.id)
+                .then(function (result) {
+                    console.log(result);
+                    res.redirect('/userData');
+                })
+                .catch(error =>{
+                    console.log(error);
+                });
+        }
+    }
+});
+
+
+app.get('/userDataChange', function (req, res) {
+    console.log("UPDATE users SET " + req.param('attribute') + "='" + req.param('data') + "' WHERE id=" + req.param('uid') + ";");
+    userDataChange(req.param('attribute'), req.param('data'), req.param('uid'))
+        .then(function (result) {
+            res.send(result);
+        })
+        .catch(error =>{
+            console.log(error);
+        });
+});
+
 
 // route for user logout
 app.get('/logout', (req, res) => {
@@ -1137,6 +1181,10 @@ function getParts(){
 
 function getProduct(id){
     return client.query("SELECT * FROM product WHERE id = " + id + ";");
+}
+
+function getUser(id){
+    return client.query("SELECT * FROM users WHERE id = " + id + ";");
 }
 
 function getType(type){

@@ -12,6 +12,7 @@ function downloadUrl(url, callback) {
 
 
 $('.data').keypress(function (data) {
+    console.log("lol");
     if(data.which === 13) {
         var url = 'http://localhost:3000/userDataChange?attribute=' + $(this).data('attribute') + '&data=' + $(this).val() + '&uid=' + $(this).data('id');
         console.log(url);

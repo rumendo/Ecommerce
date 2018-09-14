@@ -28,7 +28,7 @@
     <h1>Bitaka.bg
         <div class="input-group nav navbar-nav navbar-right" style="width: 300px;">
             {{#command}}
-            <span style="font-size: 16px">Hello, {{command}}!&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <span style="font-size: 16px">Hello, <a href="/userData">{{command}}</a>!&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
             {{/command}}
             <span class="input-group-addon">Search: </span>
             <form action="/search" method="get">
@@ -50,6 +50,7 @@
             <ul class="nav navbar-nav navbar-right">
                 {{#command}}
                 <li><a href="/cart">Cart</a></li>
+                <li><a href="/orders">My orders</a></li>
                 <li><a href="/logout">Log Out</a></li>
                 {{/command}}
                 {{^command}}

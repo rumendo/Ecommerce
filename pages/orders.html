@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title>Manage products</title>
+    <title>Check orders</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 </head>
@@ -9,7 +9,7 @@
     <h1>Bitaka.bg
         <div class="input-group nav navbar-nav navbar-right" style="width: 300px;">
             {{#command}}
-            <span style="font-size: 16px">Hello, {{command}}!&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <span style="font-size: 16px">Hello, <a href="/userData">{{command}}</a>!&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
             {{/command}}
             <span class="input-group-addon">Search: </span>
             <form action="/search" method="get">
@@ -29,6 +29,7 @@
 
             <ul class="nav navbar-nav navbar-right">
                 <li><a href="/admin">Admin</a></li>
+                <li><a href="/orders">My orders</a></li>
                 <li><a href="/logout">Log Out</a></li>
             </ul>
         </div><!-- /.navbar-collapse -->
@@ -41,39 +42,18 @@
             <thead class="thead-light">
                 <tr>
                     <th>ID</th>
-                    <th>User ID</th>
                     <th>Total price</th>
                     <th>Address</th>
-                    <th>Phone
-                    <th>Status code</th>
-                    <th>Cancel Order</th>
+                    <th>Phone</th>
                 </tr>
             </thead>
             {{#rows}}
             <tr>
                 <td><a href="/admin/orders/order?id={{id}}">{{id}}</a></td>
-                <td><a href="/admin/orders?uid={{user_id}}">{{user_id}}</a></td>
                 <td>{{product_price}}$</td>
                 <td>{{address}}</td>
                 <td>{{phone}}</td>
-                <td>
-                    <form action="/" method="get">
-                        <input class="form-control order" id="code{{id}}" list="codes" placeholder="{{status_code}}">
-                        <datalist id="codes">
-                            <option value="1 - Pending">
-                            <option value="2 - Awaiting Payment">
-                            <option value="3 - Awaiting Fulfillment">
-                            <option value="4 - Awaiting Shipment">
-                            <option value="5 - Awaiting Pickup">
-                        </datalist>
-                    </form>
-                </td>
-                <form action="/admin/orders/cancel" method="get" id="{{id}}">
-                    <input name="id" class="btn btn-primary" type="hidden" value="{{id}}"/>
-                </form>
-                <td>
-                    <input class="btn btn-primary" type="submit" value="Cancel order" form="{{id}}"/>
-                </td>
+                <td>{{status_code}}</td>
             </tr>
             {{/rows}}
         </table>
@@ -81,4 +61,3 @@
 </div>
 </body>
 </html>
-<script src="/javascripts/status_update.js"></script>
